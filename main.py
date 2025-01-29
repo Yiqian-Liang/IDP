@@ -5,7 +5,7 @@ from code_reader import QRCodeReader
 message_string=QRCodeReader.read_qr_code()
 destination=QRCodeReader.parse_qr_data(message_string)
 def line_following():
-    return None
+    sensor1=
 def navigate_to(destination, pickup_location):
     """Navigate AGV based on pickup location"""
     print(f"Navigating to {destination} from {pickup_location}...")
