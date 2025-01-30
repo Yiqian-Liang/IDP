@@ -22,9 +22,9 @@ def line_following():#line following function
     status = sensor_status()
     if staturs[0] == 0 and status[-1] == 0
         if status[1] == 1 :
-            wheels.turn_left(40)  # All sensors are on the line, move forward
+            wheels.turn_left()  # All sensors are on the line, move forward
         elif status[2] == 1 :
-            wheels.turn_right(40)
+            wheels.turn_right()
         else :
             wheels.Forward()
 
