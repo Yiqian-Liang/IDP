@@ -6,11 +6,7 @@ wheels = Wheel((7,6), (4, 5))
 #navigation function
 message_string=QRCodeReader.read_qr_code()
 destination=QRCodeReader.parse_qr_data(message_string)
-sensor1=LineSensor(12)
-sensor2=LineSensor(13)
-sensor3=LineSensor(14)
-sensor4=LineSensor(15)
-sensors=[sensor1,sensor2,sensor3,sensor4]
+sensors=[LineSensor(12),LineSensor(13),LineSensor(14),LineSensor(15)]
 def sensor_status():
     status=[]
     for i in range(4):
@@ -23,17 +19,14 @@ def line_following():#line following function
     #print("Following the line...")
     #Output: TTL(Black for LOW output, White for HIGH output)
     #this is line following so junctions not included
-    while True:
-        status = sensor_status()
-        if status == [0, 0, 0, 0]:  # All sensors are on the line, move forward
-            wheels.forward(80)
-        elif status == [0, 0, 1, 0]:  # left_shifted, need to turn right
+    status = sensor_status()
+    if staturs[0] == 0 and status[-1] == 0
+        if status[1] == 1 :
+            wheels.turn_left(40)  # All sensors are on the line, move forward
+        elif status[2] == 1 :
             wheels.turn_right(40)
-        elif status == [0, 1, 0, 0]:  # right_shifted, need to turn left
-            wheels.turn_left(40)
-        elif status == [0, 0, 1, 0]:  # Only sensor 3 is off the line
-            #print("Sensor 3 off line. Turning slightly left...")
-            wheels.turn_left(40)
+        else :
+            wheels.Forward()
 
 def navigate_to(destination, pickup_location):
     """Navigate AGV based on pickup location"""
