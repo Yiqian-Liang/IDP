@@ -18,7 +18,7 @@ def sensor_status():
         #print(f"Sensor {i+1}: {sensors[i].read()}")
         sleep(0.1)
     return status
-def line_following():
+def line_following():#line following function
     """Follow the line using the line sensors"""
     #print("Following the line...")
     #Output: TTL(Black for LOW output, White for HIGH output)
@@ -43,7 +43,7 @@ def navigate_to(destination, pickup_location):
         if destination == "A":
             while True:#conditions may change
                 line_following()
-                if sensor1.read() == 1 and sensor2.read() == 1:
+                if sensor1.read() == 1:
                     turn_left(70)
                     sleep(1)#may need to change the secs
                 if sensor2.read() == 1 and sensor3.read() == 1:
