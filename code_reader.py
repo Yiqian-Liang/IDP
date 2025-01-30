@@ -39,7 +39,7 @@ class QRCodeReader:
         if qr_data and len(qr_data) > 0:
             destination = qr_data[0]  # The first character represents the destination
             if destination in ["A", "B", "C", "D"]:
-                print(f"Destination identified: {destination}")
+                #print(f"Destination identified: {destination}")
                 return destination
-        print("Invalid QR Code data")
+        #print("Invalid QR Code data")
         return None
