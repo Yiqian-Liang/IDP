@@ -1,3 +1,5 @@
+import struct
+import machine
 class QRCodeReader:
     """Class to handle QR Code reading via I2C on Raspberry Pi Pico."""
     
