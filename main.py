@@ -1,5 +1,5 @@
 from motor import Wheel, Actuator  # Import the Wheel and Actuator classes
-from time import sleep
+from time import sleep 
 from code_reader import QRCodeReader
 from line_sensor import LineSensor
 from distance_sensor import DistanceSensor
@@ -22,7 +22,7 @@ def main():
         sleep(1) #rotate 90 degrees
         navigate_to("Depot 1",destination)
         drop_off()
-        sleep(2) #rotate 180 degrees, sleep longer
+        sleep(2) #rotate 180 degrees, sleep longer, may need to adjust
         if i<n-1:
             destination=go_back(destination,"Depot 1")
         else:
