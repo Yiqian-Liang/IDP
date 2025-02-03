@@ -6,38 +6,13 @@ from distance_sensor import DistanceSensor
 from machine import Pin, PWM, I2C
 distance_sensor=DistanceSensor()
 code_reader=QRCodeReader()
-wheels = Wheel((7,6), (4, 5))
+wheels = Wheel((4,5),(7,6)) # Initialize the wheels (GP4, GP5 for left wheel, GP7, GP6 for right wheel) before the order was wrong
 actuator = Actuator(8, 9) # Initialize linear actuator (GP8 for direction, GP9 for PWM control)
 #navigation function
 # message_string=QRCodeReader.read_qr_code()
 # destination=QRCodeReader.parse_qr_data(message_string)
 sensors=[LineSensor(12),LineSensor(13),LineSensor(14),LineSensor(15)]
 #go to depot ->use distance sensor to detect distance->scan QR code->pick up->navigate to destination->drop off->go back to depot  (during this have some number n to record the number of boxes loaded)->depo2
-def main():
-    destination=go_to_depo1()
-    n=4
-    for i in range(n):
-        pickup()
-        wheels.rotate_right()
-        sleep(1) #rotate 90 degrees
-        navigate_to("Depot 1",destination)
-        drop_off()
-        sleep(2) 
-        if i<n-1:
-            destination=go_back(destination,"Depot 1")
-        else:
-            destination=go_back(destination,"Depot 2")
-    for i in range(n):
-        pickup()
-        navigate_to("Depot 2",destination)
-        drop_off()
-        if i<n-1:
-            destination=go_back(destination,"Depot 2")
-        else:
-            go_back(destination,"Start Point")
-if __name__ == "__main__":
-    main()
-
 def sensor_status():
     status=[]
     for i in range(4):
@@ -45,7 +20,7 @@ def sensor_status():
         #print(f"Sensor {i+1}: {sensors[i].read()}")
         sleep(0.1)
     return status
-def line_following(status):#line following function
+def line_following(status,direction):#line following function
     """Follow the line using the line sensors"""
     #print("Following the line...")
     #Output: TTL(Black for LOW output, White for HIGH output)
@@ -58,6 +33,42 @@ def line_following(status):#line following function
             wheels.turn_right()
         else:
             wheels.forward()
+def rotate_left():
+    # status=sensor_status()
+    # # Detect a junction (both left and right sensors detect the line)
+    # if status[0] == 1 or status[-1] == 1:
+        #print("Junction detected, turning...")
+        wheels.stop()  # Stop before turning
+        sleep(2)  # Short delay for stability
+        wheels.rotate_left(60)
+        sleep(3.2) #rotate long enough first to make sure the car deviate enough
+        #start_time = time.time()  # Start timing turn
+
+        while True:
+            wheels.rotate_left(40)  # Rotate left
+            status = sensor_status()  # Check sensor again
+            if status[2] == 1:  # If back on track, stop turning
+                wheels.stop()
+                sleep(0.5)
+                break
+
+def rotate_right():
+    # status=sensor_status()
+    # if status[0] == 1 or status[-1] == 1:
+        #print("Junction detected, turning...")
+        wheels.stop()  # Stop before turning
+        sleep(2)  # Short delay for stability
+        wheels.rotate_right(60)
+        sleep(3.2) #rotate long enough first to make sure the car deviate enough
+        #start_time = time.time()  # Start timing turn
+        while True:
+            wheels.rotate_right(40)  # Rotate left
+            status = sensor_status()  # Check sensor again
+            if status[1] == 1:  # If back on track, stop turning
+                wheels.stop()
+                sleep(0.5)
+                break
+
 def pickup():
     """Extend actuator to pick up the box"""
     #before extending, we may need to use the distance sensor and the wheels to adjust the distance
@@ -171,29 +182,27 @@ def drop_off():
     actuator.retract(60)  # Retract actuator at 60% speed
     sleep(2)
 
-# Example movement sequence
-print("Moving forward...")
-wheels.forward(80)  # Move forward at 80% speed
-sleep(2)  # Move for 2 seconds
-
-print("Turning left...")
-wheels.turn_left(60)  # Turn left at 60% speed
-sleep(1)
-
-print("Rotating right...")
-wheels.wheels.rotate_right(80)  # Rotate in place to the right
-sleep(1)
-
-print("Stopping wheels...")
-wheels.stop()  # Stop both wheels
-
-print("Extending actuator...")
-actuator.extend(60)  # Extend actuator at 60% speed
-sleep(2)
-
-print("Retracting actuator...")
-actuator.retract(60)  # Retract actuator at 60% speed
-sleep(2)
-
-print("Stopping actuator...")
-actuator.stop()  # Stop the actuator
+def main():
+    destination=go_to_depo1()
+    n=4
+    for i in range(n):
+        pickup()
+        wheels.rotate_right()
+        sleep(1) #rotate 90 degrees
+        navigate_to("Depot 1",destination)
+        drop_off()
+        sleep(2) 
+        if i<n-1:
+            destination=go_back(destination,"Depot 1")
+        else:
+            destination=go_back(destination,"Depot 2")
+    for i in range(n):
+        pickup()
+        navigate_to("Depot 2",destination)
+        drop_off()
+        if i<n-1:
+            destination=go_back(destination,"Depot 2")
+        else:
+            go_back(destination,"Start Point")
+if __name__ == "__main__":
+    main()
