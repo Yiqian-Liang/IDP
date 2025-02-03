@@ -36,7 +36,7 @@ class Wheel:
         self.left_motor.set_speed(speed)
         self.right_motor.set_speed(speed)
 
-    def reverse(self, speed=90):
+    def reverse(self, speed=40):
         """Move both wheels backward."""
         self.left_motor.set_direction(1)
         self.right_motor.set_direction(1)
@@ -61,7 +61,7 @@ class Wheel:
         """Rotate left in place (left wheel backward, right wheel forward)."""
         self.left_motor.set_direction(1)
         self.right_motor.set_direction(0)
-        self.left_motor.set_speed(speed)
+        self.left_motor.set_speed(speed/2)
         self.right_motor.set_speed(speed)
 
     def rotate_right(self, speed=60):
@@ -69,7 +69,7 @@ class Wheel:
         self.left_motor.set_direction(0)
         self.right_motor.set_direction(1)
         self.left_motor.set_speed(speed)
-        self.right_motor.set_speed(speed)
+        self.right_motor.set_speed(speed/2)
 
     def stop(self):
         """Stop both wheels."""
