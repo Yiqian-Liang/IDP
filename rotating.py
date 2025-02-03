@@ -1,3 +1,4 @@
+#this is the test code for roatation
 from motor import Wheel, Actuator  # Import the Wheel and Actuator classes
 from time import sleep 
 #import time
@@ -54,7 +55,7 @@ def main():
             while True:
                 wheels.rotate_left(40)  # Rotate left
                 status = sensor_status()  # Check sensor again
-                if status[1] == 1 or status[2] == 1:  # If back on track, stop turning
+                if status[2] == 1:  # If back on track, stop turning
                     wheels.stop()
                     sleep(0.5)
                     break
