@@ -36,7 +36,7 @@ class Wheel:
         self.left_motor.set_speed(speed)
         self.right_motor.set_speed(speed)
 
-    def reverse(self, speed=90):
+    def reverse(self, speed=40):
         """Move both wheels backward."""
         self.left_motor.set_direction(1)
         self.right_motor.set_direction(1)
