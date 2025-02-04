@@ -78,6 +78,19 @@ def rotate_right():
                 sleep(0.5)
                 break
 
+def rotate_180():
+    wheels.stop()  # Stop before turning
+    wheels.rotate_right(60)
+    sleep(5) #rotate long enough first to make sure the car deviate enough
+    #start_time = time.time()  # Start timing turn
+    while True:
+        wheels.rotate_right(40)  # Rotate right
+        status = sensor_status()  # Check sensor again
+        if status[1] == 1:  # If back on track, stop turning
+            wheels.stop()
+            sleep(0.5)
+            break
+
 def pickup():
     """Extend actuator to pick up the box"""
     #before extending, we may need to use the distance sensor and the wheels to adjust the distance
