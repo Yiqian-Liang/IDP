@@ -156,8 +156,8 @@ def navigate_to(destination,pickup_location="Depot 1",):
                         n+=1
                     else:
                         n+=1
-                        pass
-                elif status[0] == 1:
+                        continue
+                if status[0] == 1:
                     rotate_left()
                     return destination
         elif destination == "C":
@@ -170,8 +170,8 @@ def navigate_to(destination,pickup_location="Depot 1",):
                         n+=1
                     else:
                         n+=1
-                        pass
-                elif status[0] == 1:
+                        continue
+                if status[0] == 1:
                     rotate_left()
                     return destination
         elif destination == "D":
@@ -184,8 +184,8 @@ def navigate_to(destination,pickup_location="Depot 1",):
                         n+=1
                     else:
                         n+=1
-                        pass
-                elif status[0] == 1:
+                        continue
+                if status[0] == 1:
                     rotate_left()
                     return destination
     elif pickup_location == "Depot 2":  # Left side
