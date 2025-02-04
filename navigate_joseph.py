@@ -21,9 +21,6 @@ def attach_interrupts():
     sensors[0].pin.irq(trigger=Pin.IRQ_RISING, handler=junction_detected)
     sensors[-1].pin.irq(trigger=Pin.IRQ_RISING, handler=junction_detected)
 
-def line_following_rev():
-    line_following(direction = 1) #so I don't need to put in arguments when run
-
 def navigate(route):
     '''
     -Navigate takes an array of steps which make up the desired route.
