@@ -29,32 +29,37 @@ def line_following(status,direction=0):#line following function
         if status[0] == 0 and status[-1] == 0:
             if status[1] == 1 :
                 wheels.turn_right(direction=1)
+                sleep(0.5)
             elif status[2] == 1 :
                 wheels.turn_left(direction=1)
+                sleep(0.5)
             else:
                 wheels.reverse()
+                sleep(0.5)
     else:
         if status[0] == 0 and status[-1] == 0:
             if status[1] == 1 :
                 wheels.turn_left()  # All sensors are on the line, move forward
+                sleep(0.5)
             elif status[2] == 1 :
                 wheels.turn_right()
+                sleep(0.5)
             else:
                 wheels.forward()
+                sleep(0.5)
 
-def rotate_left():
+def rotate_left(speed):
     # status=sensor_status()
     # # Detect a junction (both left and right sensors detect the line)
     # if status[0] == 1 or status[-1] == 1:
         #print("Junction detected, turning...")
         wheels.stop()  # Stop before turning
-        sleep(2)  # Short delay for stability
-        wheels.rotate_left(60)
+        sleep(1)  # Short delay for stability
+        wheels.rotate_left(speed)
         sleep(3.2) #rotate long enough first to make sure the car deviate enough
         #start_time = time.time()  # Start timing turn
-
         while True:
-            wheels.rotate_left(40)  # Rotate left
+            wheels.rotate_left(speed)  # Rotate left
             status = sensor_status()  # Check sensor again
             if status[2] == 1:  # If back on track, stop turning
                 wheels.stop()
@@ -66,12 +71,12 @@ def rotate_right():
     # if status[0] == 1 or status[-1] == 1:
         #print("Junction detected, turning...")
         wheels.stop()  # Stop before turning
-        sleep(2)  # Short delay for stability
-        wheels.rotate_right(60)
+        sleep(1)  # Short delay for stability
+        wheels.rotate_right(speed)
         sleep(3.2) #rotate long enough first to make sure the car deviate enough
         #start_time = time.time()  # Start timing turn
         while True:
-            wheels.rotate_right(40)  # Rotate right
+            wheels.rotate_right(speed)  # Rotate right
             status = sensor_status()  # Check sensor again
             if status[1] == 1:  # If back on track, stop turning
                 wheels.stop()

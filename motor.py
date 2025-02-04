@@ -45,31 +45,41 @@ class Wheel:
 
     def turn_left(self, speed=90, direction=0):
         """Turn left (slow down left wheel, keep right wheel moving)."""
-        self.left_motor.set_direction(direction)  
-        self.right_motor.set_direction(direction)  
-        self.left_motor.set_speed(speed-10)  # Reduce left wheel speed
-        self.right_motor.set_speed(speed+10)
+        if direction==1:
+            self.left_motor.set_direction(direction)  
+            self.right_motor.set_direction(direction)  
+            self.left_motor.set_speed(speed+10)
+            self.right_motor.set_speed(speed-10)
+        else:
+            self.left_motor.set_direction(direction)  
+            self.right_motor.set_direction(direction)
+            self.right_motor.set_speed(speed+10)  
+            self.left_motor.set_speed(speed-10)  # Reduce left wheel speed
 
     def turn_right(self, speed=90, direction=0):
         """Turn right (slow down right wheel, keep left wheel moving)."""
-        self.left_motor.set_direction(direction)
-        self.right_motor.set_direction(direction)
-        self.left_motor.set_speed(speed+10)
-        self.right_motor.set_speed(speed-10)  # Reduce right wheel speed
+        if direction==1:
+            self.left_motor.set_direction(direction)
+            self.right_motor.set_direction(direction)
+            self.right_motor.set_speed(speed+10)
+            self.left_motor.set_speed(speed-10)
+        else:
+            self.left_motor.set_direction(direction)
+            self.right_motor.set_direction(direction)
+            self.left_motor.set_speed(speed+10)
+            self.right_motor.set_speed(speed-10)  # Reduce right wheel speed
 
     def rotate_left(self, speed=60):
-        """Rotate left in place (left wheel backward, right wheel forward)."""
         self.left_motor.set_direction(1)
         self.right_motor.set_direction(0)
-        self.left_motor.set_speed(speed)
+        self.left_motor.set_speed(0)
         self.right_motor.set_speed(speed)
 
     def rotate_right(self, speed=60):
-        """Rotate right in place (left wheel forward, right wheel backward)."""
         self.left_motor.set_direction(0)
         self.right_motor.set_direction(1)
         self.left_motor.set_speed(speed)
-        self.right_motor.set_speed(speed)
+        self.right_motor.set_speed(0)
 
     def stop(self):
         """Stop both wheels."""
