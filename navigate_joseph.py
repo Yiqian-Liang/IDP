@@ -1,10 +1,7 @@
 from motor import Wheel, Actuator  # Import the Wheel and Actuator classes
 from line_sensor import LineSensor
-from distance_sensor import DistanceSensor
-from threading import Timer #To create timer interrupts
-from machine import Pin, PWM, I2C
-distance_sensor=DistanceSensor()
-code_reader=QRCodeReader()
+from machine import Pin, PWM, I2C, Timer
+from time import sleep
 wheels = Wheel((4,5),(7,6))
 actuator = Actuator(8, 9) # Initialize linear actuator (GP8 for direction, GP9 for PWM control)
 #navigation function
@@ -12,11 +9,13 @@ actuator = Actuator(8, 9) # Initialize linear actuator (GP8 for direction, GP9 f
 # destination=QRCodeReader.parse_qr_data(message_string)
 sensors=[LineSensor(12),LineSensor(13),LineSensor(14),LineSensor(15)]
 
+button = Pin(22, Pin.IN, Pin.PULL_DOWN)
+
 def junction_detected(pin):
     global junction_flag
     junction_flag = 1  # Set the flag when an interrupt occurs
 
-def attach_interrupts():
+def attach_interrupts(timer = None):
     sensors[0].pin.irq(trigger=Pin.IRQ_RISING, handler=junction_detected)
     sensors[-1].pin.irq(trigger=Pin.IRQ_RISING, handler=junction_detected)
 
@@ -36,16 +35,30 @@ def navigate(route):
     n_steps = len(route)
     cur_step = 0
     global junction_flag 
-    junction_flag = -1
+    junction_flag = 0
+
+    #Set up timer
+    tim = Timer()
 
     #Assign interrupts that set the flag to be 1 if either sensor detects a line
     attach_interrupts()
+
+    while button.value() == 0:
+        pass
+
+    while junction_flag == 0:
+        #First step just run continuous action
+        route[cur_step][2]()
 
     while True:
         #When junction flag == 1
         if junction_flag == 1:
             #increment step (i.e. first step will be 0)
             cur_step += 1
+            #Temporarily unnattach interrupts
+            sensors[0].pin.irq(trigger = Pin.IRQ_RISING, handler = None)
+            sensors[-1].pin.irq(trigger = Pin.IRQ_RISING, handler = None)
+            junction_flag = 0
 
             #Perform safety check on junction if necessary
             if route[cur_step][0] is not None:
@@ -57,25 +70,20 @@ def navigate(route):
             if route[cur_step][1] is not None :
 
                 route[cur_step][1]()
-
-                #Temporarily unnattach interrupts
-                sensors[0].pin.irq(trigger = Pin.IRQ_RISING, handler = None)
-                sensors[-1].pin.irq(trigger = Pin.IRQ_RISING, handler = None)
-                junction_flag = 0
-
-                #Set timer to reattach interrupts once moved away from junction
-                #Junction recovery time may need adjusting
-                Timer(0.5, attach_interrupts)
-
-            elif route[cur_step][1] is None:
-                Timer(0.5, attach_interrupts)
     
         else:
-            while junction_flag != 1:
-                #Perform continuous action until junction detected
+            if cur_step == n_steps - 1:
+                #if its the last action
                 route[cur_step][2]()
                 #The final action in the route should then call the next route
                 #This will depend on previous location, number of deliveries etc
+            else:
+                #Set timer to reattach interrupts once moved away from junction
+                #Junction recovery time may need adjusting
+                tim.init(period=500, mode=Timer.ONE_SHOT, callback=attach_interrupts)
+                while junction_flag != 1:
+                    #Perform continuous action until junction detected
+                    route[cur_step][2]()
 
 
 
@@ -86,7 +94,13 @@ def safety_check(junction):
         return 1
     else:
         return 0
-    
+
+def last_action():
+    wheels.stop()
+    while button.value() == 0:
+        pass
+    navigate(test_route_Ad1)
+
 
 #Copied and pasted these from main for my use here----------------------------------------
 #Should be removed later
@@ -97,12 +111,15 @@ def sensor_status():
         #print(f"Sensor {i+1}: {sensors[i].read()}")
         sleep(0.01)
     return status
-def line_following(status,direction=0):#line following function
+
+def line_following(direction=0):#line following function
     """Follow the line using the line sensors"""
     #print("Following the line...")
     #Output: TTL(Black for LOW output, White for HIGH output)
     #this is line following so junctions not included
     #status=sensor_status()
+    status = sensor_status()
+
     if status[0] == 0 and status[-1] == 0:
         if status[2] == 1 :
             wheels.turn_right()
@@ -114,13 +131,13 @@ def line_following(status,direction=0):#line following function
             
 
 
-def rotate_left(speed):
+def rotate_left(speed = 60):
     # status=sensor_status()
     # # Detect a junction (both left and right sensors detect the line)
     # if status[0] == 1 or status[-1] == 1:
         #print("Junction detected, turning...")
         wheels.stop()  # Stop before turning
-        sleep(1)  # Short delay for stability
+        sleep(0.1)  # Short delay for stability
         wheels.rotate_left(speed)
         sleep(3.2) #rotate long enough first to make sure the car deviate enough
         #start_time = time.time()  # Start timing turn
@@ -132,12 +149,12 @@ def rotate_left(speed):
                 sleep(0.05)
                 break
 
-def rotate_right(speed):
+def rotate_right(speed = 60):
     # status=sensor_status()
     # if status[0] == 1 or status[-1] == 1:
         #print("Junction detected, turning...")
         wheels.stop()  # Stop before turning
-        sleep(1)  # Short delay for stability
+        sleep(0.1)  # Short delay for stability
         wheels.rotate_right(speed)
         sleep(3.2) #rotate long enough first to make sure the car deviate enough
         #start_time = time.time()  # Start timing turn
@@ -149,7 +166,7 @@ def rotate_right(speed):
                 sleep(0.05)
                 break
 
-def rotate_180(direction):
+def rotate_180(direction = 1, speed = 60):
     wheels.stop()  # Stop before turning
     wheels.full_rotation(direction)
     sleep(2) #rotate long enough first to make sure the car deviate enough
@@ -164,7 +181,9 @@ def rotate_180(direction):
 
 
 #route for testing from depot 1 to A
-test_route_d1A = [[None, rotate_180, line_following], [None, rotate_right, line_following], [None, None, line_following],[None, rotate_right, line_following],[None, None, wheels.stop]]
+test_route_d1A = [[None, None, line_following],[None, rotate_180, line_following], [None, rotate_left, line_following], [None, None, line_following],[None, rotate_right, line_following],[None, None, last_action]]
+test_route_Ad1 = [[None,None,line_following], [None, rotate_180, line_following],[None, rotate_left, line_following],[None,None,line_following],[None, rotate_right, wheels.stop]]
 
 navigate(test_route_d1A)
+
 
