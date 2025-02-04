@@ -66,7 +66,7 @@ def rotate_left(speed):
                 sleep(0.5)
                 break
 
-def rotate_right():
+def rotate_right(speed):
     # status=sensor_status()
     # if status[0] == 1 or status[-1] == 1:
         #print("Junction detected, turning...")
@@ -82,6 +82,19 @@ def rotate_right():
                 wheels.stop()
                 sleep(0.5)
                 break
+
+def rotate_180(direction):
+    wheels.stop()  # Stop before turning
+    wheels.full_rotation(direction)
+    sleep(5) #rotate long enough first to make sure the car deviate enough
+    #start_time = time.time()  # Start timing turn
+    while True:
+        wheels.full_rotation(direction)  # Rotate anticlockwise
+        status = sensor_status()  # Check sensor again
+        if status[1+direction] == 1:  # If back on track, stop turning
+            wheels.stop()
+            sleep(0.5)
+            break
 
 def pickup():
     """Extend actuator to pick up the box"""
