@@ -18,36 +18,22 @@ def sensor_status():
     for i in range(4):
         status.append(sensors[i].read())
         #print(f"Sensor {i+1}: {sensors[i].read()}")
-        sleep(0.1)
     return status
-def line_following(status,direction=0):#line following function
+def line_following(status):#line following function
     """Follow the line using the line sensors"""
     #print("Following the line...")
     #Output: TTL(Black for LOW output, White for HIGH output)
     #this is line following so junctions not included
     #status=sensor_status()
-    if direction==1:
-        if status[0] == 0 and status[-1] == 0:
-            if status[1] == 1 :
-                wheels.turn_right(direction=1)
-                #sleep(0.5)
-            elif status[2] == 1 :
-                wheels.turn_left(direction=1)
-                #sleep(0.5)
-            else:
-                wheels.reverse()
-                #sleep(0.5)
-    else:
-        if status[0] == 0 and status[-1] == 0:
-            if status[1] == 1 :
-                wheels.turn_left()  # All sensors are on the line, move forward
-                #sleep(0.5)
-            elif status[2] == 1 :
-                wheels.turn_right()
-                #sleep(0.5)
-            else:
-                wheels.forward()
-                #sleep(0.5)
+    if status[0] == 0 and status[-1] == 0:
+        if status[2] == 1 :
+            wheels.turn_right()           
+        elif status[1] == 1 :
+            wheels.turn_left()
+        else:
+            wheels.forward()
+            
+
 
 def rotate_left(speed,angle=90):
     # status=sensor_status()
@@ -72,7 +58,7 @@ def rotate_left(speed,angle=90):
             status = sensor_status()  # Check sensor again
             if status[2] == 1:  # If back on track, stop turning
                 wheels.stop()
-                sleep(0.5)
+                sleep(0.05)
                 break
 
 def rotate_right(speed,angle=90):
@@ -97,20 +83,20 @@ def rotate_right(speed,angle=90):
             status = sensor_status()  # Check sensor again
             if status[1] == 1:  # If back on track, stop turning
                 wheels.stop()
-                sleep(0.5)
+                sleep(0.05)
                 break
 
 def rotate_180(direction):
     wheels.stop()  # Stop before turning
     wheels.full_rotation(direction)
-    sleep(5) #rotate long enough first to make sure the car deviate enough
+    sleep(2) #rotate long enough first to make sure the car deviate enough
     #start_time = time.time()  # Start timing turn
     while True:
         wheels.full_rotation(direction)  # Rotate anticlockwise
         status = sensor_status()  # Check sensor again
         if status[1+direction] == 1:  # If back on track, stop turning
             wheels.stop()
-            sleep(0.5)
+            sleep(0.01)
             break
 
 def pickup():
