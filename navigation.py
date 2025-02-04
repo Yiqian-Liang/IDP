@@ -84,6 +84,7 @@ def navigate_to(destination,pickup_location="Depot 1",):
     n = 0  # Track the number of times status[-1] is triggered
     if pickup_location == "Depot 1":  # Right side
         if destination == "A":
+            rotate_right()
             while True:  # Loop until reaching the destination
                 status = sensor_status()  # Read current sensor status
                 line_following(status,1)  # Execute line-following, in the reverse direction first
