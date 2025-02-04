@@ -163,12 +163,16 @@ def navigate_to(pickup_location, destination):
     elif pickup_location == "Depot 2":  # Left side
         if destination == "A":
             #the planned path
+            pass
         elif destination == "B":
             #the planned path
+            pass
         elif destination == "C":
             #the planned path
+            pass
         elif destination == "D":
             #the planned path
+            pass
 
 def go_back(destination, pickup_location): #get destination from navigate_to, return the destination for the next box, may need to use dict for route reversal, harcoding again for now
     turn_count = 0
@@ -201,20 +205,27 @@ def go_back(destination, pickup_location): #get destination from navigate_to, re
                             return destination
         elif destination == "B":
             #the planned path
+            pass
         elif destination == "C":
+            pass
             #the planned path
         elif destination == "D":
+            pass
             #the planned path
 
     elif pickup_location == "Depot 2":  # Left side
         if destination == "A":
+            pass
             #the planned path
         elif destination == "B":
+            pass
             #the planned path
         elif destination == "C":
+            pass
             #the planned path
         elif destination == "D":
             #the planned path
+            pass
 
 def drop_off():
     """Retract actuator to drop off the box"""
