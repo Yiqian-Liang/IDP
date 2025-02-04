@@ -2,7 +2,6 @@ from motor import Wheel, Actuator  # Import the Wheel and Actuator classes
 from line_sensor import LineSensor
 from distance_sensor import DistanceSensor
 from threading import Timer #To create timer interrupts
-from main import rotate_left, rotate_right, line_following #to test the route
 from machine import Pin, PWM, I2C
 distance_sensor=DistanceSensor()
 code_reader=QRCodeReader()
@@ -37,19 +36,17 @@ def navigate(route):
     n_steps = len(route)
     cur_step = 0
     global junction_flag 
-    junction_flag = 0
+    junction_flag = -1
 
     #Assign interrupts that set the flag to be 1 if either sensor detects a line
     attach_interrupts()
 
-    #First action, only do the continuous action
-    while junction_flag == 0:
-        route[0][2]()
-
     while True:
         #When junction flag == 1
         if junction_flag == 1:
+            #increment step (i.e. first step will be 0)
             cur_step += 1
+
             #Perform safety check on junction if necessary
             if route[cur_step][0] is not None:
                 while safety_check(route[cur_step][0]) == 0:
@@ -57,7 +54,7 @@ def navigate(route):
                     pass
             
             #Carry out turning if necessary
-            elif route[cur_step][1] is not None :
+            if route[cur_step][1] is not None :
 
                 route[cur_step][1]()
 
@@ -69,8 +66,8 @@ def navigate(route):
                 #Set timer to reattach interrupts once moved away from junction
                 #Junction recovery time may need adjusting
                 Timer(0.5, attach_interrupts)
+
             elif route[cur_step][1] is None:
-                Wheel.forward(90)
                 Timer(0.5, attach_interrupts)
     
         else:
@@ -89,8 +86,85 @@ def safety_check(junction):
         return 1
     else:
         return 0
+    
 
-test_route_d1A = [[None, None, line_following_rev], [None, rotate_right, line_following], [None, None, line_following],[None, rotate_right, line_following]]
+#Copied and pasted these from main for my use here----------------------------------------
+#Should be removed later
+def sensor_status():
+    status=[]
+    for i in range(4):
+        status.append(sensors[i].read())
+        #print(f"Sensor {i+1}: {sensors[i].read()}")
+        sleep(0.01)
+    return status
+def line_following(status,direction=0):#line following function
+    """Follow the line using the line sensors"""
+    #print("Following the line...")
+    #Output: TTL(Black for LOW output, White for HIGH output)
+    #this is line following so junctions not included
+    #status=sensor_status()
+    if status[0] == 0 and status[-1] == 0:
+        if status[2] == 1 :
+            wheels.turn_right()
+            
+        elif status[1] == 1 :
+            wheels.turn_left()
+        else:
+            wheels.forward()
+            
+
+
+def rotate_left(speed):
+    # status=sensor_status()
+    # # Detect a junction (both left and right sensors detect the line)
+    # if status[0] == 1 or status[-1] == 1:
+        #print("Junction detected, turning...")
+        wheels.stop()  # Stop before turning
+        sleep(1)  # Short delay for stability
+        wheels.rotate_left(speed)
+        sleep(3.2) #rotate long enough first to make sure the car deviate enough
+        #start_time = time.time()  # Start timing turn
+        while True:
+            wheels.rotate_left(speed)  # Rotate left
+            status = sensor_status()  # Check sensor again
+            if status[2] == 1:  # If back on track, stop turning
+                wheels.stop()
+                sleep(0.05)
+                break
+
+def rotate_right(speed):
+    # status=sensor_status()
+    # if status[0] == 1 or status[-1] == 1:
+        #print("Junction detected, turning...")
+        wheels.stop()  # Stop before turning
+        sleep(1)  # Short delay for stability
+        wheels.rotate_right(speed)
+        sleep(3.2) #rotate long enough first to make sure the car deviate enough
+        #start_time = time.time()  # Start timing turn
+        while True:
+            wheels.rotate_right(speed)  # Rotate right
+            status = sensor_status()  # Check sensor again
+            if status[1] == 1:  # If back on track, stop turning
+                wheels.stop()
+                sleep(0.05)
+                break
+
+def rotate_180(direction):
+    wheels.stop()  # Stop before turning
+    wheels.full_rotation(direction)
+    sleep(2) #rotate long enough first to make sure the car deviate enough
+    #start_time = time.time()  # Start timing turn
+    while True:
+        wheels.full_rotation(direction)  # Rotate anticlockwise
+        status = sensor_status()  # Check sensor again
+        if status[1+direction] == 1:  # If back on track, stop turning
+            wheels.stop()
+            sleep(0.01)
+            break
+
+
+#route for testing from depot 1 to A
+test_route_d1A = [[None, rotate_180, line_following], [None, rotate_right, line_following], [None, None, line_following],[None, rotate_right, line_following],[None, None, wheels.stop]]
 
 navigate(test_route_d1A)
 
