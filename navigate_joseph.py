@@ -109,7 +109,7 @@ def sensor_status():
     for i in range(4):
         status.append(sensors[i].read())
         #print(f"Sensor {i+1}: {sensors[i].read()}")
-        sleep(0.01)
+        #sleep(0.01)
     return status
 
 def line_following(direction=0):#line following function
