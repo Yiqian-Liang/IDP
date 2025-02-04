@@ -84,24 +84,31 @@ def navigate_to(destination,pickup_location="Depot 1",):
     n = 0  # Track the number of times status[-1] is triggered
     if pickup_location == "Depot 1":  # Right side
         if destination == "A":
-            rotate_right()
+            wheels.stop()
+            sleep(20)
+            rotate_right(angle=180)
             while True:  # Loop until reaching the destination
                 status = sensor_status()  # Read current sensor status
-                line_following(status,1)  # Execute line-following, in the reverse direction first
-                if status[-1] == 1:
+                line_following(status)  # Execute line-following, in the reverse direction first
+                if status[0] == 1:
+                    wheels.stop()
+                    sleep(3)
                     if n in [0]: # Execute left rotation only at the 1st occurrence of status[0] == 1, use in list so more convenient to adjust and add if necessary
-                        rotate_right()
+                        rotate_left()
                         sleep(1)  # Adjust timing if necessary
                         n += 1  # Update turn count
                     else:
                         n+=1
-                        pass
-                elif status[0] == 1:
+                        continue
+                if status[-1] == 1:
+                    rotate_right()
+                if status[0]==1 and status[-1]==1:
+                    wheels.stop()
                     return destination  # Arrived at A's doorstep
         elif destination == "B":
             while True:
                 status = sensor_status()
-                line_following(status,1)
+                line_following(status)
                 if status[-1] == 1:
                     if n in [1]:
                         rotate_right()
@@ -115,7 +122,7 @@ def navigate_to(destination,pickup_location="Depot 1",):
         elif destination == "C":
             while True:
                 status = sensor_status()
-                line_following(status,1)
+                line_following(status)
                 if status[-1] == 1:
                     if n in [1,2]:
                         rotate_right()
@@ -129,7 +136,7 @@ def navigate_to(destination,pickup_location="Depot 1",):
         elif destination == "D":
             while True:
                 status = sensor_status()
-                line_following(status,1)
+                line_following(status)
                 if status[-1] == 1:
                     if n in [2]:
                         rotate_right()

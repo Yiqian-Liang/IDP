@@ -4,6 +4,7 @@ from code_reader import QRCodeReader
 from line_sensor import LineSensor
 from distance_sensor import DistanceSensor
 from machine import Pin, PWM, I2C
+#import math
 distance_sensor=DistanceSensor()
 code_reader=QRCodeReader()
 wheels = Wheel((4,5),(7,6)) # Initialize the wheels (GP4, GP5 for left wheel, GP7, GP6 for right wheel) before the order was wrong
@@ -29,34 +30,42 @@ def line_following(status,direction=0):#line following function
         if status[0] == 0 and status[-1] == 0:
             if status[1] == 1 :
                 wheels.turn_right(direction=1)
-                sleep(0.5)
+                #sleep(0.5)
             elif status[2] == 1 :
                 wheels.turn_left(direction=1)
-                sleep(0.5)
+                #sleep(0.5)
             else:
                 wheels.reverse()
-                sleep(0.5)
+                #sleep(0.5)
     else:
         if status[0] == 0 and status[-1] == 0:
             if status[1] == 1 :
                 wheels.turn_left()  # All sensors are on the line, move forward
-                sleep(0.5)
+                #sleep(0.5)
             elif status[2] == 1 :
                 wheels.turn_right()
-                sleep(0.5)
+                #sleep(0.5)
             else:
                 wheels.forward()
-                sleep(0.5)
+                #sleep(0.5)
 
-def rotate_left(speed):
+def rotate_left(speed,angle=90):
     # status=sensor_status()
     # # Detect a junction (both left and right sensors detect the line)
     # if status[0] == 1 or status[-1] == 1:
         #print("Junction detected, turning...")
+        rpm_full_load=40
+        rpm=speed*rpm_full_load/100
+        d_wheel=6.5/100 #in meters
+        w_wheel=rpm*2*3.14/60
+        D=0.19 #in meters ditance between the wheels
+        v_wheel=d_wheel*w_wheel
+        w_ic=2*v_wheel/D
+        time=angle*3.14*0.9/(180*w_ic) #leave some room for adjustment       
         wheels.stop()  # Stop before turning
         sleep(1)  # Short delay for stability
         wheels.rotate_left(speed)
-        sleep(3.2) #rotate long enough first to make sure the car deviate enough
+        sleep(time) #rotate long enough first to make sure the car deviate enough
         #start_time = time.time()  # Start timing turn
         while True:
             wheels.rotate_left(speed)  # Rotate left
@@ -66,14 +75,22 @@ def rotate_left(speed):
                 sleep(0.5)
                 break
 
-def rotate_right(speed):
+def rotate_right(speed,angle=90):
     # status=sensor_status()
     # if status[0] == 1 or status[-1] == 1:
         #print("Junction detected, turning...")
+        rpm_full_load=40
+        rpm=speed*rpm_full_load/100
+        d_wheel=6.5/100 #in meters
+        w_wheel=rpm*2*3.14/60
+        D=0.19 #in meters ditance between the wheels
+        v_wheel=d_wheel*w_wheel
+        w_ic=2*v_wheel/D
+        time=angle*3.14*0.9/(180*w_ic) #leave some room for adjustment     
         wheels.stop()  # Stop before turning
         sleep(1)  # Short delay for stability
         wheels.rotate_right(speed)
-        sleep(3.2) #rotate long enough first to make sure the car deviate enough
+        sleep(time) #rotate long enough first to make sure the car deviate enough
         #start_time = time.time()  # Start timing turn
         while True:
             wheels.rotate_right(speed)  # Rotate right
@@ -117,28 +134,36 @@ def go_to_depo1(): #go to depot 1 and return the destination
             destination=code_reader.parse_qr_data(code_reader.read_qr_code())
             return destination
 
-def navigate_to(pickup_location, destination):
+def navigate_to(destination,pickup_location="Depot 1",):
     """Navigate AGV based on pickup location."""
-    n = 0  # Track the number of times status[-1]/status[0] is triggered for the routes planned now only need one
+    n = 0  # Track the number of times status[-1] is triggered
     if pickup_location == "Depot 1":  # Right side
         if destination == "A":
+            wheels.stop()
+            sleep(20)
+            rotate_right(angle=180)
             while True:  # Loop until reaching the destination
                 status = sensor_status()  # Read current sensor status
-                line_following(status,1)  # Execute line-following, in the reverse direction first
-                if status[-1] == 1:
+                line_following(status)  # Execute line-following, in the reverse direction first
+                if status[0] == 1:
+                    wheels.stop()
+                    sleep(3)
                     if n in [0]: # Execute left rotation only at the 1st occurrence of status[0] == 1, use in list so more convenient to adjust and add if necessary
-                        rotate_right()
+                        rotate_left()
                         sleep(1)  # Adjust timing if necessary
                         n += 1  # Update turn count
                     else:
                         n+=1
-                        pass
-                elif status[0] == 1:
+                        continue
+                if status[-1] == 1:
+                    rotate_right()
+                if status[0]==1 and status[-1]==1:
+                    wheels.stop()
                     return destination  # Arrived at A's doorstep
         elif destination == "B":
             while True:
                 status = sensor_status()
-                line_following(status,1)
+                line_following(status)
                 if status[-1] == 1:
                     if n in [1]:
                         rotate_right()
@@ -152,7 +177,7 @@ def navigate_to(pickup_location, destination):
         elif destination == "C":
             while True:
                 status = sensor_status()
-                line_following(status,1)
+                line_following(status)
                 if status[-1] == 1:
                     if n in [1,2]:
                         rotate_right()
@@ -166,7 +191,7 @@ def navigate_to(pickup_location, destination):
         elif destination == "D":
             while True:
                 status = sensor_status()
-                line_following(status,1)
+                line_following(status)
                 if status[-1] == 1:
                     if n in [2]:
                         rotate_right()
@@ -177,7 +202,6 @@ def navigate_to(pickup_location, destination):
                 elif status[0] == 1:
                     rotate_left()
                     return destination
-
     elif pickup_location == "Depot 2":  # Left side
         if destination == "A":
             #the planned path
