@@ -6,7 +6,7 @@ from main import rotate_left, rotate_right, line_following #to test the route
 from machine import Pin, PWM, I2C
 distance_sensor=DistanceSensor()
 code_reader=QRCodeReader()
-wheels = Wheel((7,6), (4, 5))
+wheels = Wheel((4,5),(7,6))
 actuator = Actuator(8, 9) # Initialize linear actuator (GP8 for direction, GP9 for PWM control)
 #navigation function
 # message_string=QRCodeReader.read_qr_code()
