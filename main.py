@@ -1,11 +1,10 @@
 from motor import Wheel, Actuator  # Import the Wheel and Actuator classes
 from time import sleep 
-from code_reader import QRCodeReader
+
 from line_sensor import LineSensor
-from distance_sensor import DistanceSensor
+
 from machine import Pin, PWM, I2C
-distance_sensor=DistanceSensor()
-code_reader=QRCodeReader()
+
 wheels = Wheel((4,5),(7,6)) # Initialize the wheels (GP4, GP5 for left wheel, GP7, GP6 for right wheel) before the order was wrong
 actuator = Actuator(8, 9) # Initialize linear actuator (GP8 for direction, GP9 for PWM control)
 # message_string=QRCodeReader.read_qr_code()
@@ -17,7 +16,7 @@ def sensor_status():
     for i in range(4):
         status.append(sensors[i].read())
         #print(f"Sensor {i+1}: {sensors[i].read()}")
-        sleep(0.1)
+        sleep(0.01)
     return status
 def line_following(status,direction=0):#line following function
     """Follow the line using the line sensors"""
@@ -25,28 +24,16 @@ def line_following(status,direction=0):#line following function
     #Output: TTL(Black for LOW output, White for HIGH output)
     #this is line following so junctions not included
     #status=sensor_status()
-    if direction==1:
-        if status[0] == 0 and status[-1] == 0:
-            if status[1] == 1 :
-                wheels.turn_right(direction=1)
-                sleep(0.5)
-            elif status[2] == 1 :
-                wheels.turn_left(direction=1)
-                sleep(0.5)
-            else:
-                wheels.reverse()
-                sleep(0.5)
-    else:
-        if status[0] == 0 and status[-1] == 0:
-            if status[1] == 1 :
-                wheels.turn_left()  # All sensors are on the line, move forward
-                sleep(0.5)
-            elif status[2] == 1 :
-                wheels.turn_right()
-                sleep(0.5)
-            else:
-                wheels.forward()
-                sleep(0.5)
+    if status[0] == 0 and status[-1] == 0:
+        if status[2] == 1 :
+            wheels.turn_right()
+            
+        elif status[1] == 1 :
+            wheels.turn_left()
+        else:
+            wheels.forward()
+            
+
 
 def rotate_left(speed):
     # status=sensor_status()
@@ -63,7 +50,7 @@ def rotate_left(speed):
             status = sensor_status()  # Check sensor again
             if status[2] == 1:  # If back on track, stop turning
                 wheels.stop()
-                sleep(0.5)
+                sleep(0.05)
                 break
 
 def rotate_right(speed):
@@ -80,20 +67,20 @@ def rotate_right(speed):
             status = sensor_status()  # Check sensor again
             if status[1] == 1:  # If back on track, stop turning
                 wheels.stop()
-                sleep(0.5)
+                sleep(0.05)
                 break
 
 def rotate_180(direction):
     wheels.stop()  # Stop before turning
     wheels.full_rotation(direction)
-    sleep(5) #rotate long enough first to make sure the car deviate enough
+    sleep(2) #rotate long enough first to make sure the car deviate enough
     #start_time = time.time()  # Start timing turn
     while True:
         wheels.full_rotation(direction)  # Rotate anticlockwise
         status = sensor_status()  # Check sensor again
         if status[1+direction] == 1:  # If back on track, stop turning
             wheels.stop()
-            sleep(0.5)
+            sleep(0.01)
             break
 
 def pickup():
@@ -258,26 +245,14 @@ def drop_off():
     sleep(2)
 
 def main():
-    destination=go_to_depo1()
-    n=4
-    for i in range(n):
-        pickup()
-        wheels.rotate_right()
-        sleep(1) #rotate 90 degrees
-        navigate_to("Depot 1",destination)
-        drop_off()
-        sleep(2) 
-        if i<n-1:
-            destination=go_back(destination,"Depot 1")
-        else:
-            destination=go_back(destination,"Depot 2")
-    for i in range(n):
-        pickup()
-        navigate_to("Depot 2",destination)
-        drop_off()
-        if i<n-1:
-            destination=go_back(destination,"Depot 2")
-        else:
-            go_back(destination,"Start Point")
+    status=sensor_status()
+    rotate_180(0)
+    sleep(2)
+    rotate_180(1)
+    while True:
+        status=sensor_status()
+        line_following(status)    
+
+
 if __name__ == "__main__":
     main()
