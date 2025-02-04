@@ -2,6 +2,7 @@ from motor import Wheel, Actuator  # Import the Wheel and Actuator classes
 from line_sensor import LineSensor
 from distance_sensor import DistanceSensor
 from threading import Timer #To create timer interrupts
+from main import rotate_left, rotate_right, line_following #to test the route
 from machine import Pin, PWM, I2C
 distance_sensor=DistanceSensor()
 code_reader=QRCodeReader()
@@ -68,8 +69,10 @@ def navigate(route):
                 #Set timer to reattach interrupts once moved away from junction
                 #Junction recovery time may need adjusting
                 Timer(0.5, attach_interrupts)
-                
-        
+            elif route[cur_step][1] is None:
+                Wheel.forward(90)
+                Timer(0.5, attach_interrupts)
+    
         else:
             while junction_flag != 1:
                 #Perform continuous action until junction detected
@@ -87,4 +90,7 @@ def safety_check(junction):
     else:
         return 0
 
-    
+test_route_d1A = [[None, None, line_following_rev], [None, rotate_right, line_following], [None, None, line_following],[None, rotate_right, line_following]]
+
+navigate(test_route_d1A)
+
