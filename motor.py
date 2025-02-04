@@ -68,6 +68,12 @@ class Wheel:
             self.right_motor.set_direction(direction)
             self.left_motor.set_speed(speed+10)
             self.right_motor.set_speed(speed-10)  # Reduce right wheel speed
+    def full_rotation(self, direction) :
+        if direction == "clockwise" :
+           self.left_motor.set_direction(1)
+           self.right_motor.set_direction(0)
+           self.left_motor.set_speed(90)
+           self.right_motor.set_speed(90) 
 
     def rotate_left(self, speed=60):
         self.left_motor.set_direction(1)
