@@ -15,7 +15,7 @@ forward_speed=80
 rotate_speed=60
 routes=[{"start_to_D1":[],"A":[[(1,0),lambda:rotate(direction="left")], [(1,0),None], [(0,1),lambda:rotate(direction="right")],[(1,1),wheels.stop]]}]#and so on
 button = Pin(22, Pin.IN, Pin.PULL_DOWN)
-poll_timer = Timer(-1)
+
 def junction_detected(pin):
     global junction_flag
     junction_flag = 1  # Set the flag when an interrupt occurs
