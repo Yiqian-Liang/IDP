@@ -8,6 +8,5 @@ class LED:
         self.pin.value(1)
     def stop_flash (self) :
         self.pin.value(0)
+
         
-if True :
-    pass
