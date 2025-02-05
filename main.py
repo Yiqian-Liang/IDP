@@ -38,15 +38,23 @@ def line_following(direction=0):#line following function
         else:
             wheels.forward()
             
-def rotate_left(speed = 60):
+def rotate_left(speed,angle=90):
     # status=sensor_status()
     # # Detect a junction (both left and right sensors detect the line)
     # if status[0] == 1 or status[-1] == 1:
         #print("Junction detected, turning...")
+        rpm_full_load=40
+        rpm=speed*rpm_full_load/100
+        d_wheel=6.5/100 #in meters
+        w_wheel=rpm*2*3.14/60
+        D=0.19 #in meters ditance between the wheels
+        v_wheel=d_wheel*w_wheel
+        w_ic=2*v_wheel/D
+        time=angle*3.14*0.9/(180*w_ic) #leave some room for adjustment       
         wheels.stop()  # Stop before turning
-        sleep(0.1)  # Short delay for stability
+        sleep(1)  # Short delay for stability
         wheels.rotate_left(speed)
-        sleep(3.2) #rotate long enough first to make sure the car deviate enough
+        sleep(time) #rotate long enough first to make sure the car deviate enough
         #start_time = time.time()  # Start timing turn
         while True:
             wheels.rotate_left(speed)  # Rotate left
@@ -56,14 +64,22 @@ def rotate_left(speed = 60):
                 sleep(0.05)
                 break
 
-def rotate_right(speed = 60):
+def rotate_right(speed,angle=90):
     # status=sensor_status()
     # if status[0] == 1 or status[-1] == 1:
         #print("Junction detected, turning...")
+        rpm_full_load=40
+        rpm=speed*rpm_full_load/100
+        d_wheel=6.5/100 #in meters
+        w_wheel=rpm*2*3.14/60
+        D=0.19 #in meters ditance between the wheels
+        v_wheel=d_wheel*w_wheel
+        w_ic=2*v_wheel/D
+        time=angle*3.14*0.9/(180*w_ic) #leave some room for adjustment     
         wheels.stop()  # Stop before turning
-        sleep(0.1)  # Short delay for stability
+        sleep(1)  # Short delay for stability
         wheels.rotate_right(speed)
-        sleep(3.2) #rotate long enough first to make sure the car deviate enough
+        sleep(time) #rotate long enough first to make sure the car deviate enough
         #start_time = time.time()  # Start timing turn
         while True:
             wheels.rotate_right(speed)  # Rotate right
@@ -72,7 +88,6 @@ def rotate_right(speed = 60):
                 wheels.stop()
                 sleep(0.05)
                 break
-
 def rotate_180(direction = 1, speed = 60):
     wheels.stop()  # Stop before turning
     wheels.full_rotation(direction)
