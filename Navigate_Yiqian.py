@@ -4,12 +4,13 @@ from code_reader import QRCodeReader
 from line_sensor import LineSensor
 from distance_sensor import DistanceSensor
 from machine import Pin, PWM, I2C,Timer
+poll_timer=Timer(-1)
 distance_sensor=DistanceSensor()
 code_reader=QRCodeReader()
 wheels = Wheel((4,5),(7,6)) # Initialize the wheels (GP4, GP5 for left wheel, GP7, GP6 for right wheel) before the order was wrong
 actuator = Actuator(8, 9) # Initialize linear actuator (GP8 for direction, GP9 for PWM control)
 sensors=[LineSensor(12),LineSensor(13),LineSensor(14),LineSensor(15)]
-
+direction=0
 forward_speed=80
 rotate_speed=60
 routes=[{"start_to_D1":[],"A":[[(1,0),lambda:rotate(direction="left")], [(1,0),None], [(0,1),lambda:rotate(direction="right")],[(1,1),wheels.stop]]}]#and so on
@@ -19,18 +20,27 @@ def junction_detected(pin):
     global junction_flag
     junction_flag = 1  # Set the flag when an interrupt occurs
 
-def turning(pin):
-    global turning_flag, turning_direction
-    if turning_flag:  # 避免重复触发
-        return
-    turning_flag = True  
-    if pin == sensors[1].pin:
-        turning_direction = 1  
-    elif pin == sensors[2].pin:
-        turning_direction = 2  
+flag = False
+
+def sensor_callback(timer):
+    global flag
+    # 检查传感器状态，如果满足条件则置 flag
+    if sensor[1].read() == 1 or sensor[2].read()==1
+        flag = True
+        if sensor[1].read==1:
+            direction=1
+        elif sensor[2].read()==1:
+            direction==1
     else:
-        turning_direction = 0
-    turning_flag = False  
+        flag = False
+        direction=0
+
+# 初始化定时器，每 1ms 调用一次 sensor_callback
+poll_timer = Timer(-1)
+poll_timer.init(period=1, mode=Timer.PERIODIC, callback=sensor_callback)
+
+
+
 
 
 def attach_junction_interrupts(timer = None):
@@ -53,14 +63,8 @@ def safety_check(junction):
         return 0
     else:
         return 1
-def line_following():
-    if sensors[0].read() == 0 and sensors[-1].read() == 0 :
-        if sensors[1].read() == 1 :
-            wheels.turn_left()  # All sensors are on the line, move forward
-        elif sensors[2].read() == 1 :
-            wheels.turn_right()
-        else:
-            wheels.forward()
+
+
 def rotate(direction,speed=rotate_speed,angle=90):
     # status=sensor_status()
     # # Detect a junction (both left and right sensors detect the line)
