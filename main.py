@@ -61,7 +61,6 @@ def rotate_left(speed,angle=90):
             status = sensor_status()  # Check sensor again
             if status[2] == 1:  # If back on track, stop turning
                 wheels.stop()
-                sleep(0.05)
                 break
 
 def rotate_right(speed,angle=90):
@@ -86,7 +85,6 @@ def rotate_right(speed,angle=90):
             status = sensor_status()  # Check sensor again
             if status[1] == 1:  # If back on track, stop turning
                 wheels.stop()
-                sleep(0.05)
                 break
 def rotate_180(direction = 1, speed = 60):
     wheels.stop()  # Stop before turning
@@ -98,7 +96,6 @@ def rotate_180(direction = 1, speed = 60):
         status = sensor_status()  # Check sensor again
         if status[1+direction] == 1:  # If back on track, stop turning
             wheels.stop()
-            sleep(0.01)
             break
 
 def pickup():
