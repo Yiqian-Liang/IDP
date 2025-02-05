@@ -12,7 +12,7 @@ sensors=[LineSensor(12),LineSensor(13),LineSensor(14),LineSensor(15)]
 
 forward_speed=80
 rotate_speed=60
-
+routes=[{"start_to_D1":[],"A":[[(1,0),lambda:rotate(direction="left")], [(1,0),None], [(0,1),lambda:rotate(direction="right")],[(1,1),wheels.stop]]}]#and so on
 button = Pin(22, Pin.IN, Pin.PULL_DOWN)
 turning_flag= False
 def junction_detected(pin):
@@ -119,8 +119,7 @@ def navigate(route):
         #When junction flag == 1
         #some sample route eg  [[(1,0),rotate_left], [(1,0),None], [(0,1),rotate_right()],[(1,1),wheels.stop]]
         if junction_flag == 1:
-            #increment step (i.e. first step will be 0)
-            cur_step += 1
+            #increment step (i.e. first step will be 0)           
             #Temporarily unnattach interrupts
             unnattach_junction_interrupts()
             unnattach_turning_interrupts()
@@ -130,8 +129,10 @@ def navigate(route):
                 pass
             if route[cur_step][1] is not None:
                 route[cur_step][1]()
+                cur_step += 1
             else:
-                attach_turning_interrupts()
+                line_following()
+                cur_step += 1
         else:
             #may just use the line following function here
             line_following()
@@ -182,37 +183,6 @@ def last_action():
     while button.value() == 0:
         pass
     navigate(test_route_Ad1)
-
-
-# #Copied and pasted these from main for my use here----------------------------------------
-# #Should be removed later
-# def sensor_status():
-#     status=[]
-#     for i in range(4):
-#         status.append(sensors[i].read())
-#         #print(f"Sensor {i+1}: {sensors[i].read()}")
-#         #sleep(0.01)
-#     return status
-
-# def line_following(direction=0):#line following function
-#     """Follow the line using the line sensors"""
-#     #print("Following the line...")
-#     #Output: TTL(Black for LOW output, White for HIGH output)
-#     #this is line following so junctions not included
-#     #status=sensor_status()
-#     status = sensor_status()
-
-#     if status[0] == 0 and status[-1] == 0:
-#         if status[2] == 1 :
-#             wheels.turn_right()
-            
-#         elif status[1] == 1 :
-#             wheels.turn_left()
-#         else:
-#             wheels.forward()
-            
-
-
 
 #route for testing from depot 1 to A
 test_route_d1A = [[(1,0),lambda:rotate(direction="left")], [(1,0),None], [(0,1),lambda:rotate(direction="right")],[(1,1),wheels.stop]]
