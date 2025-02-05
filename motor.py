@@ -74,7 +74,6 @@ class Wheel:
         if direction == 0 :
            self.left_motor.set_direction(1)
            self.right_motor.set_direction(0)
-
         else :
            self.left_motor.set_direction(0)
            self.right_motor.set_direction(1)
