@@ -105,12 +105,12 @@ def start_robot():
     cur_location = None
     while button.value() == 0:
         pass
-    navigate(startd1)
+    navigate(routes.startd1)
 
 def last_action():
     wheels.stop()
     while button.value() == 0:
         pass
-    navigate(Ad1)
+    navigate(routes.d1A)
 
 
