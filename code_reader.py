@@ -38,5 +38,6 @@ class QRCodeReader:
             print(f"Error reading QR Code: {e}")
             return None
         
+        
 
     
