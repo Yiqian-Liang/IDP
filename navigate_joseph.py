@@ -2,6 +2,7 @@ from motor import Wheel, Actuator  # Import the Wheel and Actuator classes
 from line_sensor import LineSensor
 from machine import Pin, PWM, I2C, Timer
 from time import sleep
+
 wheels = Wheel((4,5),(7,6))
 actuator = Actuator(8, 9) # Initialize linear actuator (GP8 for direction, GP9 for PWM control)
 #navigation function
@@ -73,7 +74,7 @@ def navigate(route):
     
         else:
             if cur_step == n_steps - 1:
-                #if its the last action
+                #if it's the last action don't reset the juunction flag
                 route[cur_step][2]()
                 #The final action in the route should then call the next route
                 #This will depend on previous location, number of deliveries etc
@@ -95,95 +96,19 @@ def safety_check(junction):
     else:
         return 0
 
+def start_robot():
+    global package_number
+    package_number = 1
+    global cur_location
+    cur_location = None
+    while button.value() == 0:
+        pass
+    navigate(route_startd1)
+
 def last_action():
     wheels.stop()
     while button.value() == 0:
         pass
-    navigate(test_route_Ad1)
-
-
-#Copied and pasted these from main for my use here----------------------------------------
-#Should be removed later
-def sensor_status():
-    status=[]
-    for i in range(4):
-        status.append(sensors[i].read())
-        #print(f"Sensor {i+1}: {sensors[i].read()}")
-        #sleep(0.01)
-    return status
-
-def line_following(direction=0):#line following function
-    """Follow the line using the line sensors"""
-    #print("Following the line...")
-    #Output: TTL(Black for LOW output, White for HIGH output)
-    #this is line following so junctions not included
-    #status=sensor_status()
-    status = sensor_status()
-
-    if status[0] == 0 and status[-1] == 0:
-        if status[2] == 1 :
-            wheels.turn_right()
-            
-        elif status[1] == 1 :
-            wheels.turn_left()
-        else:
-            wheels.forward()
-            
-
-
-def rotate_left(speed = 60):
-    # status=sensor_status()
-    # # Detect a junction (both left and right sensors detect the line)
-    # if status[0] == 1 or status[-1] == 1:
-        #print("Junction detected, turning...")
-        wheels.stop()  # Stop before turning
-        sleep(0.1)  # Short delay for stability
-        wheels.rotate_left(speed)
-        sleep(3.2) #rotate long enough first to make sure the car deviate enough
-        #start_time = time.time()  # Start timing turn
-        while True:
-            wheels.rotate_left(speed)  # Rotate left
-            status = sensor_status()  # Check sensor again
-            if status[2] == 1:  # If back on track, stop turning
-                wheels.stop()
-                sleep(0.05)
-                break
-
-def rotate_right(speed = 60):
-    # status=sensor_status()
-    # if status[0] == 1 or status[-1] == 1:
-        #print("Junction detected, turning...")
-        wheels.stop()  # Stop before turning
-        sleep(0.1)  # Short delay for stability
-        wheels.rotate_right(speed)
-        sleep(3.2) #rotate long enough first to make sure the car deviate enough
-        #start_time = time.time()  # Start timing turn
-        while True:
-            wheels.rotate_right(speed)  # Rotate right
-            status = sensor_status()  # Check sensor again
-            if status[1] == 1:  # If back on track, stop turning
-                wheels.stop()
-                sleep(0.05)
-                break
-
-def rotate_180(direction = 1, speed = 60):
-    wheels.stop()  # Stop before turning
-    wheels.full_rotation(direction)
-    sleep(2) #rotate long enough first to make sure the car deviate enough
-    #start_time = time.time()  # Start timing turn
-    while True:
-        wheels.full_rotation(direction)  # Rotate anticlockwise
-        status = sensor_status()  # Check sensor again
-        if status[1+direction] == 1:  # If back on track, stop turning
-            wheels.stop()
-            sleep(0.01)
-            break
-
-
-#route for testing from depot 1 to A
-test_route_d1A = [[None, None, line_following],[None, rotate_180, line_following], [None, rotate_left, line_following], [None, None, line_following],[None, rotate_right, line_following],[None, None, last_action]]
-test_route_Ad1 = [[None,None,line_following], [None, rotate_180, line_following],[None, rotate_left, line_following],[None,None,line_following],[None, rotate_right, wheels.stop]]
-
-navigate(test_route_d1A)
+    navigate(route_Ad1)
 
 
