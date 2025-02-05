@@ -170,11 +170,11 @@ def pick_up_block(rotate,distance_cm,depo):
         sleep(1)
         attach_turning_interrupts()
         attach_junction_interrupts()
-        if depo==1:
-            rotate(direction="right",angle=180)
-        elif depo==2:
-            rotate(direction="left",angle=180)
-        return data
+        # if depo==1:
+        #     rotate(direction="right",angle=180)
+        # elif depo==2:
+        #     rotate(direction="left",angle=180)
+        # return data
 
 def drop_off_block(distance_cm):
         detach_junction_interrupts()
@@ -188,7 +188,7 @@ def drop_off_block(distance_cm):
         sleep(1)
         attach_turning_interrupts()
         attach_junction_interrupts()
-        rotate(direction="left",angle=180)
+        # rotate(direction="left",angle=180)
 
 def last_action():
     wheels.stop()
@@ -207,7 +207,7 @@ def main():
     n=4
     for i in range(n):
         pick_up_block()
-        rotate_right(angle=180)
+        rotate(direction="right",angle=180)
         navigate()
         drop_off()
         sleep(2) 
@@ -217,6 +217,7 @@ def main():
             destination=go_back(destination,"Depot 2")
     for i in range(n):
         pickup()
+        rotate(direction="left",angle=180)
         navigate_to("Depot 2",destination)
         drop_off()
         if i<n-1:
