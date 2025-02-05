@@ -2,6 +2,7 @@ from motor import Wheel, Actuator  # Import the Wheel and Actuator classes
 from line_sensor import LineSensor
 from machine import Pin, PWM, I2C, Timer
 from time import sleep
+import routes
 
 wheels = Wheel((4,5),(7,6))
 actuator = Actuator(8, 9) # Initialize linear actuator (GP8 for direction, GP9 for PWM control)
@@ -42,14 +43,15 @@ def navigate(route):
     tim = Timer()
 
     #Assign interrupts that set the flag to be 1 if either sensor detects a line
-    attach_interrupts()
-
-    while button.value() == 0:
-        pass
+    tim.init(period=500, mode=Timer.ONE_SHOT, callback=attach_interrupts)
 
     while junction_flag == 0:
-        #First step just run continuous action
-        route[cur_step][2]()
+        if route[cur_step][2] is None:
+            #e.g. if first step is turn right
+            pass
+        else:
+            #First step just run continuous action
+            route[cur_step][2]()
 
     while True:
         #When junction flag == 1
@@ -103,12 +105,12 @@ def start_robot():
     cur_location = None
     while button.value() == 0:
         pass
-    navigate(route_startd1)
+    navigate(startd1)
 
 def last_action():
     wheels.stop()
     while button.value() == 0:
         pass
-    navigate(route_Ad1)
+    navigate(Ad1)
 
 

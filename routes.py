@@ -4,26 +4,55 @@ from navigate_joseph import navigate, last_action
 wheels = Wheel((4,5),(7,6))
 
 #route from start box to depot 1
-route_startd1 = [[None, None, wheels.forward], 
-                 [None, None, line_following],
-                 [None, rotate_right, line_following],
-                 [None, rotate_right, pickup]]
+startd1 = [[None, None, wheels.forward], 
+            [None, None, line_following],
+            [None, rotate_right, line_following],
+            [None, rotate_right, pickup]]
 #route from depot 1 to A
-route_d1A = [[None, None, line_following],
-             [None, rotate_180, line_following], 
-             [None, rotate_left, line_following], 
-             [None, None, line_following],
-             [None, rotate_right, line_following],
-             [None, None, drop_off]]
+d1A = [[None, None, line_following], 
+        [None, rotate_left, line_following], 
+        [None, None, line_following],
+        [None, rotate_right, drop_off]]
 #route from depot 1 to B
-route_d1B = [[None, None, line_following],
-             [None, rotate_left, line_following],
-             [None, rotate_left, drop_off]]
+d1B = [[None, None, line_following],
+       [None, None, line_following],
+        [None, rotate_left, line_following],
+        [None, rotate_left, drop_off]]
+#route from depot 1 to C
+d1C = [[None, None, line_following],
+       [None, None, line_following],
+        [None, rotate_left, line_following],
+        [None, None, line_following],
+        [None, rotate_right, line_following],
+        [None, rotate_left, drop_off]]
+#route from depot 1 to D
+d1D = [[None, None, line_following],
+       [None, None, line_following],
+        [None, rotate_left, line_following],
+        [None, rotate_left, drop_off]]
 #route from A to depot 1
-route_Ad1 = [[None,None,line_following], 
-             [None, rotate_180, line_following],
-             [None, rotate_left, line_following],
-             [None,None,line_following],
-             [None, rotate_right, wheels.stop]]
+Ad1 = [[None,None, line_following],
+        [None, rotate_left, line_following],
+        [None,None,line_following],
+        [None, rotate_right, pickup]]
+#route from B to depot 1
+Bd1 = [[None, None, line_following],
+        [None, rotate_right, line_following],
+        [None, rotate_right, line_following],
+        [None, None, pickup]]
+#route from C to depot 1
+Cd1 = [[None, None, line_following],
+       [None, rotate_right, line_following],
+       [None, rotate_left, line_following],
+       [None, None, line_following],
+       [None, rotate_right, line_following],
+       [None, None, pickup]]
+#route from D to depot 1
+Dd1 = [[None, None, line_following],
+       [None, rotate_right, line_following],
+       [None, rotate_right, line_following],
+       [None, None, line_following],
+       [None, None, pickup]]
+
 
 navigate(route_d1A)
