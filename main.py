@@ -4,7 +4,10 @@ from code_reader import QRCodeReader
 from line_sensor import LineSensor
 from distance_sensor import DistanceSensor
 from machine import Pin, PWM, I2C
+from navigate_joseph import navigate
+from  routes import *
 #import math
+current_box_location = 1
 distance_sensor=DistanceSensor()
 code_reader=QRCodeReader()
 wheels = Wheel((4,5),(7,6)) # Initialize the wheels (GP4, GP5 for left wheel, GP7, GP6 for right wheel) before the order was wrong
@@ -21,7 +24,7 @@ def sensor_status():
         #sleep(0.01)
     return status
 
-def line_following(direction=0):#line following function
+def line_following(direction=0, speed = 90):#line following function
     """Follow the line using the line sensors"""
     #print("Following the line...")
     #Output: TTL(Black for LOW output, White for HIGH output)
@@ -31,12 +34,12 @@ def line_following(direction=0):#line following function
 
     if status[0] == 0 and status[-1] == 0:
         if status[2] == 1 :
-            wheels.turn_right()
+            wheels.turn_right(speed)
             
         elif status[1] == 1 :
-            wheels.turn_left()
+            wheels.turn_left(speed)
         else:
-            wheels.forward()
+            wheels.forward(speed)
             
 def rotate_left(speed,angle=90):
     # status=sensor_status()
@@ -61,7 +64,6 @@ def rotate_left(speed,angle=90):
             status = sensor_status()  # Check sensor again
             if status[2] == 1:  # If back on track, stop turning
                 wheels.stop()
-                sleep(0.05)
                 break
 
 def rotate_right(speed,angle=90):
@@ -86,7 +88,6 @@ def rotate_right(speed,angle=90):
             status = sensor_status()  # Check sensor again
             if status[1] == 1:  # If back on track, stop turning
                 wheels.stop()
-                sleep(0.05)
                 break
 def rotate_180(direction = 1, speed = 60):
     wheels.stop()  # Stop before turning
@@ -98,21 +99,25 @@ def rotate_180(direction = 1, speed = 60):
         status = sensor_status()  # Check sensor again
         if status[1+direction] == 1:  # If back on track, stop turning
             wheels.stop()
-            sleep(0.01)
             break
 
 def pickup():
-    """Extend actuator to pick up the box"""
-    #before extending, we may need to use the distance sensor and the wheels to adjust the distance
-    actuator.extend(60)  # Extend actuator at 60% speed
-    sleep(2)
+    while True :
+        line_following()
+        destination = code_reader.read_qr_code()
+        if destination :
+            rotate_180()
+            destination = "d"+str(current_box_location)+destination
+            return navigate(globals()[destination])
+            
+
 
 def go_to_depo1(): #go to depot 1 and return the destination
     """Navigate AGV to Depot 1"""
     n=0
     while True:
         status=sensor_status()
-        line_following(status)
+        line_following()
         if status[0] == 1 and status[-1]== 1:
             rotate_right()
             sleep(1)
@@ -132,7 +137,7 @@ def navigate_to(destination,pickup_location="Depot 1",):
             rotate_right(angle=180)
             while True:  # Loop until reaching the destination
                 status = sensor_status()  # Read current sensor status
-                line_following(status)  # Execute line-following, in the reverse direction first
+                line_following()  # Execute line-following, in the reverse direction first
                 if status[0] == 1:
                     wheels.stop()
                     sleep(3)
@@ -151,7 +156,7 @@ def navigate_to(destination,pickup_location="Depot 1",):
         elif destination == "B":
             while True:
                 status = sensor_status()
-                line_following(status)
+                line_following()
                 if status[-1] == 1:
                     if n in [1]:
                         rotate_right()
@@ -165,7 +170,7 @@ def navigate_to(destination,pickup_location="Depot 1",):
         elif destination == "C":
             while True:
                 status = sensor_status()
-                line_following(status)
+                line_following()
                 if status[-1] == 1:
                     if n in [1,2]:
                         rotate_right()
@@ -179,7 +184,7 @@ def navigate_to(destination,pickup_location="Depot 1",):
         elif destination == "D":
             while True:
                 status = sensor_status()
-                line_following(status)
+                line_following()
                 if status[-1] == 1:
                     if n in [2]:
                         rotate_right()
@@ -221,7 +226,7 @@ def go_back(destination, pickup_location): #get destination from navigate_to, re
                     sleep(1)
             while True:#conditions may change
                 status=sensor_status()
-                line_following(status)
+                line_following()
                 # if status[0]==1 and status[-1]==1:
                 #     wheels.rotate_left()
                 #     sleep(1)
@@ -261,7 +266,7 @@ def drop_off():
     """Retract actuator to drop off the box"""
     while True:
         status=sensor_status()
-        line_following(status)
+        line_following()
         if status[0]==1 and status[-1]==1:
             wheels.stop()
             sleep(1)

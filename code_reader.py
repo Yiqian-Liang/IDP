@@ -13,7 +13,7 @@ class QRCodeReader:
     I2C_FORMAT = LENGTH_FORMAT + MESSAGE_FORMAT
     I2C_BYTE_COUNT = struct.calcsize(I2C_FORMAT)
 
-    def __init__(self, scl_pin=5, sda_pin=4, freq=400000):
+    def __init__(self, scl_pin=1, sda_pin=0, freq=400000):
         """Initialize I2C communication with the QR Code Reader."""
         self.i2c = machine.I2C(0, scl=machine.Pin(scl_pin), sda=machine.Pin(sda_pin), freq=freq)
 
@@ -29,19 +29,15 @@ class QRCodeReader:
 
             # Decode the message string
             message_string = bytearray(message_bytes[0:message_length]).decode("utf-8")
-            print(f"QR Code Data: {message_string}")
-            return message_string
+            #print(f"QR Code Data: {message_string}")
+            destination = message_string [0]  # The first character represents the destination
+            if destination in ["A", "B", "C", "D"]:
+                return destination
 
         except Exception as e:
             print(f"Error reading QR Code: {e}")
             return None
         
-    def parse_qr_data(self, qr_data):
-        """Parse QR code data and extract destination"""
-        if qr_data and len(qr_data) > 0:
-            destination = qr_data[0]  # The first character represents the destination
-            if destination in ["A", "B", "C", "D"]:
-                #print(f"Destination identified: {destination}")
-                return destination
-        #print("Invalid QR Code data")
-        return None
+        
+
+    
