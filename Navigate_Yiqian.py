@@ -15,47 +15,54 @@ forward_speed=80
 rotate_speed=60
 routes=[{"start_to_D1":[],"A":[[(1,0),lambda:rotate(direction="left")], [(1,0),None], [(0,1),lambda:rotate(direction="right")],[(1,1),wheels.stop]]}]#and so on
 button = Pin(22, Pin.IN, Pin.PULL_DOWN)
-turning_flag= False
+poll_timer = Timer(-1)
 def junction_detected(pin):
     global junction_flag
     junction_flag = 1  # Set the flag when an interrupt occurs
 
-flag = False
-
+# Timer callback for polling sensor status during line following.
+# This callback checks the two middle sensors (sensors[1] and sensors[2])
+# and sets the global 'direction' accordingly.
 def sensor_callback(timer):
-    global flag
-    # 检查传感器状态，如果满足条件则置 flag
-    if sensor[1].read() == 1 or sensor[2].read()==1
-        flag = True
-        if sensor[1].read==1:
-            direction=1
-        elif sensor[2].read()==1:
-            direction==1
+    global direction
+    # If sensor[1] reads 1 and sensor[2] reads 0, then set direction to left.
+    if sensors[1].read() == 1 and sensors[2].read() == 0:
+        direction = 1
+    # If sensor[2] reads 1 and sensor[1] reads 0, then set direction to right.
+    elif sensors[2].read() == 1 and sensors[1].read() == 0:
+        direction = 2
     else:
-        flag = False
-        direction=0
+        direction = 0
 
-# 初始化定时器，每 1ms 调用一次 sensor_callback
-poll_timer = Timer(-1)
-poll_timer.init(period=1, mode=Timer.PERIODIC, callback=sensor_callback)
+# Functions to attach and detach the polling timer
+def attach_polling():
+    poll_timer.init(period=1, mode=Timer.PERIODIC, callback=sensor_callback)
 
+def detach_polling():
+    poll_timer.deinit()
 
-
-
+# Simplified line following function that uses the global 'direction'
+def line_following():
+    if direction == 1:
+        wheels.turn_left()
+    elif direction == 2:
+        wheels.turn_right()
+    else:
+        wheels.forward()
 
 def attach_junction_interrupts(timer = None):
     sensors[0].pin.irq(trigger=Pin.IRQ_RISING, handler=junction_detected)
     sensors[-1].pin.irq(trigger=Pin.IRQ_RISING, handler=junction_detected)
-def unnattach_junction_interrupts():
+def detach_junction_interrupts():
     sensors[0].pin.irq(trigger = Pin.IRQ_RISING, handler = None)
     sensors[-1].pin.irq(trigger = Pin.IRQ_RISING, handler = None)
 
-def attach_turning_interrupts(timer=None):
-    sensors[1].pin.irq(trigger=Pin.IRQ_RISING, handler=turning)
-    sensors[2].pin.irq(trigger=Pin.IRQ_RISING, handler=turning)
-def unnattach_turning_interrupts():
-    sensors[1].pin.irq(trigger = Pin.IRQ_RISING, handler = None)
-    sensors[2].pin.irq(trigger = Pin.IRQ_RISING, handler = None)
+# def attach_turning_interrupts(timer=None):
+#     sensors[1].pin.irq(trigger=Pin.IRQ_RISING, handler=turning)
+#     sensors[2].pin.irq(trigger=Pin.IRQ_RISING, handler=turning)
+# def detach_turning_interrupts():
+#     sensors[1].pin.irq(trigger = Pin.IRQ_RISING, handler = None)
+#     sensors[2].pin.irq(trigger = Pin.IRQ_RISING, handler = None)
 
 def safety_check(junction):
     #simple check if the junction matches what we expect
@@ -70,7 +77,8 @@ def rotate(direction,speed=rotate_speed,angle=90):
     # # Detect a junction (both left and right sensors detect the line)
     # if status[0] == 1 or status[-1] == 1:
         #print("Junction detected, turning...")
-        unnattach_junction_interrupts()
+        detach_junction_interrupts()
+        detach_polling()
         rpm_full_load=40
         rpm=speed*rpm_full_load/100
         d_wheel=6.5/100 #in meters
@@ -84,25 +92,25 @@ def rotate(direction,speed=rotate_speed,angle=90):
         wheels.rotate_left(speed)
         sleep(time) #rotate long enough first to make sure the car deviate enough
         #start_time = time.time()  # Start timing turn
-        attach_turning_interrupts(timer=None)
         #Or attach all interrupts here, not sure
+        attach_polling()
         if direction == "left":
             wheels.rotate_left(speed)
-            if turning_direction == 2:
+            if direction == 2:
                 wheels.stop()
                 sleep(1)
-                attach_junction_interrupts() 
+                #attach_junction_interrupts() 
         elif direction == "right":
             wheels.rotate_right(speed)
-            if turning_direction == 1:
+            if direction == 1:
                 wheels.stop()
                 sleep(1)
-                attach_junction_interrupts()
+                #attach_junction_interrupts()
 
 def navigate(route):
     n_steps = len(route)
     cur_step = 0
-    global junction_flag,turning_flag, turning_direction
+    global junction_flag,direction
     junction_flag = 0
 
     #Set up timer
@@ -110,7 +118,7 @@ def navigate(route):
 
     #Assign interrupts that set the flag to be 1 if either sensor detects a line
     attach_junction_interrupts()
-    attach_turning_interrupts()
+    attach_polling()
 
     while button.value() == 0:
         pass
@@ -124,12 +132,12 @@ def navigate(route):
         #some sample route eg  [[(1,0),rotate_left], [(1,0),None], [(0,1),rotate_right()],[(1,1),wheels.stop]]
         if junction_flag == 1:
             #increment step (i.e. first step will be 0)           
-            #Temporarily unnattach interrupts
-            unnattach_junction_interrupts()
-            unnattach_turning_interrupts()
+            #Temporarily detach interrupts
+            detach_junction_interrupts()
+            #detach_polling()
             junction_flag = 0
             while safety_check(route[cur_step][0]): #safety check fails
-                #do something
+                line_following()
                 pass
             if route[cur_step][1] is not None:
                 route[cur_step][1]()
@@ -148,10 +156,10 @@ def navigate(route):
             #     wheels.forward() 
 
 
-def pick_up_block(distance_cm,depo):
-    unnattach_junction_interrupts()
+def pick_up_block(rotate,distance_cm,depo):
+    detach_junction_interrupts()
     if distance_sensor.read() < distance_cm:#we may not need this
-        unnattach_turning_interrupts()
+        detach_polling()
         wheels.stop()
         while True:
             if (data := code_reader.read()) is not None:                
@@ -163,15 +171,15 @@ def pick_up_block(distance_cm,depo):
         attach_turning_interrupts()
         attach_junction_interrupts()
         if depo==1:
-            rotate_right(angle=180)
+            rotate(direction="right",angle=180)
         elif depo==2:
-            rotate_left(angle=180)
+            rotate(direction="left",angle=180)
         return data
 
 def drop_off_block(distance_cm):
-        unnattach_junction_interrupts()
+        detach_junction_interrupts()
     #if distance_sensor.read() < distance_cm: #we may not need this
-        unnattach_turning_interrupts()
+        detach_turning_interrupts()
         wheels.stop()
         sleep(1)
         actuator.extend()
@@ -180,7 +188,7 @@ def drop_off_block(distance_cm):
         sleep(1)
         attach_turning_interrupts()
         attach_junction_interrupts()
-        rotate_left(angle=180)
+        rotate(direction="left",angle=180)
 
 def last_action():
     wheels.stop()
