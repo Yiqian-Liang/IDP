@@ -13,14 +13,148 @@ sensors=[LineSensor(12),LineSensor(13),LineSensor(14),LineSensor(15)]
 direction=0
 forward_speed=80
 rotate_speed=60
-Ad1 = [[None,None, line_following],
-        [None, rotate_left, line_following],
-        [None,None,line_following],
-        [None, rotate_right, pickup]]
 
-routes=[{"start_to_D1":[],
-"A":[[(1,0),lambda:rotate(direction="left")], [(1,0),None], [(0,1),lambda:rotate(direction="right")],[(1,1),wheels.stop],[(0,0),wheels.stop]],[]}]#use dict the first list value of the list is D1 to destination, the second is destination to D1 the third list is D2 to destination, the forth is destination to D2, and so on
+routes = {
+    "D2_to_start": [],
+    "start_to_D1": [
+        [(1, 1), None],  # Move straight from start position
+        [(1, 1), lambda: rotate(direction="right")],  # Turn left at the first junction
+        [(1, 1), lambda: rotate(direction="right")],  # Turn right at the second junction
+        [(0, 0), wheels.stop]  # Stop at D1
+    ],
+    "A": [
+        [  # D1 to A
+            [(1, 0), lambda: rotate(direction="left")],
+            [(1, 0), None],
+            [(0, 1), lambda: rotate(direction="right")],
+            [(1, 1), wheels.stop]
+        ],
+        [  # A to D1
+            [(1, 1), lambda: rotate(direction="left")],
+            [(0, 1), None],
+            [(0, 1), lambda: rotate(direction="right")],
+            [(0, 0), wheels.stop]
+        ],
+        [  # D2 to A
+            [(0, 1), lambda: rotate(direction="right")],
+            [(1, 0), lambda: rotate(direction="left")],
+            [(1, 1), wheels.stop]
+        ],
+        [  # A to D2
+            [(1, 1), lambda: rotate(direction="right")],
+            [(1, 0), lambda: rotate(direction="left")],
+            [(0, 0), wheels.stop]
+        ]
+    ],
+    "B": [
+        [  # D1 to B
+            [(1, 0), None],
+            [(1, 0), lambda: rotate(direction="left")],
+            [(1, 0), lambda: rotate(direction="left")],
+            [(1, 1), wheels.stop]
+        ],
+        [  # B to D1
+            [(1, 1), lambda: rotate(direction="right")],
+            [(1, 1), lambda: rotate(direction="right")],
+            [(0, 1), None],
+            [(0, 0), wheels.stop]
+        ],
+        [  # D2 to B
+            [(0, 1), None],
+            [(0, 1), lambda: rotate(direction="right")],
+            [(1, 0), None],
+            [(0, 1), lambda: rotate(direction="right")],
+            [(1, 1), wheels.stop]
+        ],
+        [  # B to D2
+            [(1, 1), lambda: rotate(direction="left")],
+            [(0, 1), None],
+            [(0, 1), lambda: rotate(direction="left")],
+            [(0, 1), None],
+            [(0, 0), wheels.stop]
+        ]
+    ],
+    "C": [
+        [  # D1 to C
+            [(1, 0), None],
+            [(1, 0), None],
+            [(1, 0), lambda: rotate(direction="left")],
+            [(1, 0), None],
+            [(1, 0), lambda: rotate(direction="left")],
+            [(0, 1), lambda: rotate(direction="right")],
+            [(1, 1), wheels.stop]
+        ],
+        [  # C to D1
+            [(1, 1), lambda: rotate(direction="right")],
+            [(1, 1), lambda: rotate(direction="left")],
+            [(0, 1), lambda: rotate(direction="right")],
+            [(1, 0), None],
+            [(1, 0), lambda: rotate(direction="right")],
+            [(0, 0), wheels.stop]
+        ],
+        [  # D2 to C
+            [(0, 1), lambda: rotate(direction="right")],
+            [(1, 0), lambda: rotate(direction="left")],
+            [(1, 0), None],
+            [(1, 0), lambda: rotate(direction="left")],
+            [(0, 1), lambda: rotate(direction="right")],
+            [(1, 1), wheels.stop]
+        ],
+        [  # C to D2
+            [(1, 1), lambda: rotate(direction="right")],
+            [(0, 1), lambda: rotate(direction="left")],
+            [(1, 0), lambda: rotate(direction="right")],
+            [(1, 0), None],
+            [(1, 0), lambda: rotate(direction="right")],
+            [(0, 0), wheels.stop]
+        ]
+    ],
+    "D": [
+        [  # D1 to D
+            [(1, 0), lambda: rotate(direction="left")],
+            [(1, 0), None],
+            [(1, 0), lambda: rotate(direction="right")],
+            [(1, 0), None],
+            [(0, 1), lambda: rotate(direction="right")],
+            [(1, 1), wheels.stop]
+        ],
+        [  # D to D1
+            [(1, 1), lambda: rotate(direction="left")],
+            [(0, 1), None],
+            [(1, 0), lambda: rotate(direction="left")],
+            [(1, 0), None],
+            [(1, 0), lambda: rotate(direction="right")],
+            [(0, 0), wheels.stop]
+        ],
+        [  # D2 to D
+            [(0, 1), lambda: rotate(direction="right")],
+            [(1, 0), lambda: rotate(direction="left")],
+            [(1, 0), None],
+            [(1, 0), lambda: rotate(direction="right")],
+            [(0, 1), lambda: rotate(direction="right")],
+            [(1, 1), wheels.stop]
+        ],
+        [  # D to D2
+            [(1, 1), lambda: rotate(direction="right")],
+            [(0, 1), lambda: rotate(direction="left")],
+            [(1, 0), lambda: rotate(direction="left")],
+            [(1, 0), None],
+            [(1, 0), lambda: rotate(direction="right")],
+            [(0, 0), wheels.stop]
+        ]
+    ]
+}
+
+
+
+# Use dict: 
+# - The first list is from D1 to the destination.
+# - The second list is from the destination to D1.
+# - The third list is from D2 to the destination.
+# - The fourth list is from the destination to D2, and so on.
+
 button = Pin(22, Pin.IN, Pin.PULL_DOWN)
+
 poll_timer=Timer(-1)
 rpm_full_load=40
 d_wheel=6.5/100 #in meters
@@ -86,7 +220,8 @@ def rotate(direction,speed=rotate_speed,angle=90):
         rpm=speed*rpm_full_load/100
         w_wheel=rpm*2*3.14/60
         v_wheel=d_wheel*w_wheel/2
-        w_ic=2*v_wheel/D
+        #w_ic=2*v_wheel/D
+        w_ic=v_wheel/D
         time=angle*3.14*0.9/(180*w_ic) #leave some room for adjustment       
         wheels.stop()  # Stop before turning
         sleep(1)  # Short delay for stability
@@ -195,6 +330,8 @@ def drop_off(distance_cm):
         sleep(1)
         actuator.retract()
         sleep(1)
+        wheels.reverse()
+        sleep(1) #need to adjust sleep time
         rotate(direction="right",angle=180) #left right both okay
         attach_polling()
         attach_junction_interrupts()
@@ -221,17 +358,17 @@ def main():
         drop_off()
         sleep(2) 
         if i<n-1:
-            navigate(routes[data][2])
+            navigate(routes[data][1])
         else:
-           navigate(routes[data][3])
+           navigate(routes[data][3]) #destination to D2
     for i in range(n):
         data=pick_up_block(depo=1)
-        navigate(routes[data][0])
+        navigate(routes[data][2])
         drop_off()
         sleep(2) 
         if i<n-1:
             navigate(routes[data][2])
         else:
-           navigate(routes[data][3])
+           navigate(routes["D2_to_start"])
 if __name__ == "__main__":
     main()
