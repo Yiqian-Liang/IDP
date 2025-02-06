@@ -163,7 +163,7 @@ def navigate(route):
             #     wheels.forward() 
 
 
-def pick_up_block(distance_cm=5,depo):
+def pick_up_block(depo, distance_cm=5):
     detach_junction_interrupts()   
     while distance_sensor.read() >= distance_cm:
         line_following()
