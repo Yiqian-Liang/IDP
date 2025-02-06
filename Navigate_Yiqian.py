@@ -13,7 +13,13 @@ sensors=[LineSensor(12),LineSensor(13),LineSensor(14),LineSensor(15)]
 direction=0
 forward_speed=80
 rotate_speed=60
-routes=[{"start_to_D1":[],"A":[[(1,0),lambda:rotate(direction="left")], [(1,0),None], [(0,1),lambda:rotate(direction="right")],[(1,1),wheels.stop],[(0,0),wheels.stop],[]]}]#use dict the first list value of the list is D1 to destination, the second list is D2 to destination, the third is destination to D1 the forth is destination to D2, and so on
+Ad1 = [[None,None, line_following],
+        [None, rotate_left, line_following],
+        [None,None,line_following],
+        [None, rotate_right, pickup]]
+
+routes=[{"start_to_D1":[],
+"A":[[(1,0),lambda:rotate(direction="left")], [(1,0),None], [(0,1),lambda:rotate(direction="right")],[(1,1),wheels.stop],[(0,0),wheels.stop]],[]}]#use dict the first list value of the list is D1 to destination, the second is destination to D1 the third list is D2 to destination, the forth is destination to D2, and so on
 button = Pin(22, Pin.IN, Pin.PULL_DOWN)
 poll_timer=Timer(-1)
 rpm_full_load=40
@@ -179,7 +185,7 @@ def pick_up_block(depo,distance_cm=5):
         #     rotate(direction="left",angle=180)
     return data
 
-def drop_off_block(distance_cm):
+def drop_off(distance_cm):
         detach_junction_interrupts()
     #if distance_sensor.read() < distance_cm: #we may not need this
         detach_polling()
