@@ -4,7 +4,7 @@ from code_reader import QRCodeReader
 from line_sensor import LineSensor
 from distance_sensor import DistanceSensor
 from machine import Pin, PWM, I2C,Timer
-poll_timer=Timer(-1)
+
 distance_sensor=DistanceSensor()
 code_reader=QRCodeReader()
 wheels = Wheel((4,5),(7,6)) # Initialize the wheels (GP4, GP5 for left wheel, GP7, GP6 for right wheel) before the order was wrong
@@ -13,8 +13,15 @@ sensors=[LineSensor(12),LineSensor(13),LineSensor(14),LineSensor(15)]
 direction=0
 forward_speed=80
 rotate_speed=60
-routes=[{"start_to_D1":[],"A":[[(1,0),lambda:rotate(direction="left")], [(1,0),None], [(0,1),lambda:rotate(direction="right")],[(1,1),wheels.stop]]}]#and so on
+routes=[{"start_to_D1":[],"A":[[(1,0),lambda:rotate(direction="left")], [(1,0),None], [(0,1),lambda:rotate(direction="right")],[(1,1),wheels.stop],[(0,0),wheels.stop],[]]}]#use dict the first list value of the list is D1 to destination, the second list is D2 to destination, the third is destination D1 the forth is destination to D2, and so on
 button = Pin(22, Pin.IN, Pin.PULL_DOWN)
+poll_timer=Timer(-1)
+
+rpm_full_load=40
+rpm=speed*rpm_full_load/100
+d_wheel=6.5/100 #in meters
+w_wheel=rpm*2*3.14/60
+D=0.19 #in meters ditance between the wheels
 
 def junction_detected(pin):
     global junction_flag
@@ -44,6 +51,7 @@ def detach_polling():
 
 # Simplified line following function that uses the global 'direction'
 def line_following():
+    attach_polling()
     if direction == 1:
         wheels.turn_left()
     elif direction == 2:
@@ -79,12 +87,7 @@ def rotate(direction,speed=rotate_speed,angle=90):
     # if status[0] == 1 or status[-1] == 1:
         #print("Junction detected, turning...")
         detach_junction_interrupts()
-        detach_polling()
-        rpm_full_load=40
-        rpm=speed*rpm_full_load/100
-        d_wheel=6.5/100 #in meters
-        w_wheel=rpm*2*3.14/60
-        D=0.19 #in meters ditance between the wheels
+        detach_polling() #may not need this
         v_wheel=d_wheel*w_wheel/2
         w_ic=2*v_wheel/D
         time=angle*3.14*0.9/(180*w_ic) #leave some room for adjustment       
@@ -111,7 +114,7 @@ def rotate(direction,speed=rotate_speed,angle=90):
 def navigate(route):
     n_steps = len(route)
     cur_step = 0
-    global junction_flag,direction
+    global junction_flag,direction,poll_timer
     junction_flag = 0
 
     #Set up timer
@@ -119,7 +122,7 @@ def navigate(route):
 
     #Assign interrupts that set the flag to be 1 if either sensor detects a line
     attach_junction_interrupts()
-    attach_polling()
+    #attach_polling()
 
     while button.value() == 0:
         pass
@@ -135,7 +138,7 @@ def navigate(route):
             #increment step (i.e. first step will be 0)           
             #Temporarily detach interrupts
             detach_junction_interrupts()
-            #detach_polling()
+            detach_polling()
             junction_flag = 0
             while safety_check(route[cur_step][0]): #safety check fails
                 line_following()
@@ -148,7 +151,10 @@ def navigate(route):
                 cur_step += 1
         else:
             #may just use the line following function here
-            line_following()
+            if distance_sensor.read() < 10: #extra safety not to crash
+                wheels.stop()
+            else:
+                line_following()
             # if turning_direction == 1:
             #     wheels.turn_left()
             # elif turning_direction == 2:    
@@ -157,26 +163,30 @@ def navigate(route):
             #     wheels.forward() 
 
 
-def pick_up_block(rotate,distance_cm,depo):
-    detach_junction_interrupts()
-    line following()
-    if distance_sensor.read() < distance_cm:#we may not need this
-        detach_polling()
-        wheels.stop()
-        while True:
-            if (data := code_reader.read()) is not None:                
-                break
-        actuator.extend()
-        sleep(1)
-        actuator.retract()
-        sleep(1)
-        attach_turning_interrupts()
+def pick_up_block(distance_cm=5,depo):
+    detach_junction_interrupts()   
+    while distance_sensor.read() >= distance_cm:
+        line_following()
+    detach_polling()
+    wheels.stop()
+    while True:
+        if (data := code_reader.read()) is not None:                
+            break
+    actuator.extend()
+    sleep(1)
+    actuator.retract()
+    sleep(1)
+    if depo==1:
+        rotate(direction="right",angle=180)
+        attach_junction_interrupts()
+    elif depo==2:
+        rotate(direction="left",angle=180)
         attach_junction_interrupts()
         # if depo==1:
         #     rotate(direction="right",angle=180)
         # elif depo==2:
         #     rotate(direction="left",angle=180)
-        # return data
+    return data
 
 def drop_off_block(distance_cm):
         detach_junction_interrupts()
@@ -188,6 +198,7 @@ def drop_off_block(distance_cm):
         sleep(1)
         actuator.retract()
         sleep(1)
+        rotate(direction="right",angle=180) #left right both okay
         attach_polling()
         attach_junction_interrupts()
         # rotate(direction="left",angle=180)
@@ -199,32 +210,31 @@ def drop_off_block(distance_cm):
     #navigate(test_route_Ad1)
 
 #route for testing from depot 1 to A
-test_route_d1A = [[(1,0),lambda:rotate(direction="left")], [(1,0),None], [(0,1),lambda:rotate(direction="right")],[(1,1),wheels.stop]]
+test_route_d1A = [[(1,0),lambda:rotate(direction="left")], [(1,0),None], [(0,1),lambda:rotate(direction="right")],[(1,1),wheels.stop],[(0,0),wheels.stop]]
 #test_route_Ad1 = [[None,None,line_following], [None, rotate_180, line_following],[None, rotate_left, line_following],[None,None,line_following],[None, rotate_right, wheels.stop]]
 
 navigate(test_route_d1A)
 
 def main():
-    navigate(route[0])
+    navigate(route["start_to_D1"])
     n=4
     for i in range(n):
-        pick_up_block()
-        rotate(direction="right",angle=180)
-        navigate()
+        data=pick_up_block(depo=1)
+        navigate(route[data][0])
         drop_off()
         sleep(2) 
         if i<n-1:
-            destination=navigate(destination,"Depot 1")
+            navigate(route[data][2])
         else:
-            destination=go_back(destination,"Depot 2")
+           navigate(route[data][3])
     for i in range(n):
-        pickup()
-        rotate(direction="left",angle=180)
-        navigate_to("Depot 2",destination)
+        data=pick_up_block(depo=1)
+        navigate(route[data][0])
         drop_off()
+        sleep(2) 
         if i<n-1:
-            destination=go_back(destination,"Depot 2")
+            navigate(route[data][2])
         else:
-            go_back(destination,"Start Point")
+           navigate(route[data][3])
 if __name__ == "__main__":
     main()
