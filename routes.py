@@ -1,8 +1,4 @@
-from main import line_following, rotate_180, rotate_left, rotate_right, pickup, drop_off
-from motor import Wheel
-from navigate_joseph import navigate, last_action
-wheels = Wheel((4,5),(7,6))
-
+from main import line_following, rotate_left, rotate_right, pickup, drop_off
 #route from start box to depot 1
 startd1 = [[None, None, line_following], 
             [None, None, line_following],
