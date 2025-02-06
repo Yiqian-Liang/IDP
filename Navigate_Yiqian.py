@@ -40,6 +40,7 @@ def attach_polling():
 
 def detach_polling():
     poll_timer.deinit()
+    direction=0
 
 # Simplified line following function that uses the global 'direction'
 def line_following():
@@ -158,6 +159,7 @@ def navigate(route):
 
 def pick_up_block(rotate,distance_cm,depo):
     detach_junction_interrupts()
+    line following()
     if distance_sensor.read() < distance_cm:#we may not need this
         detach_polling()
         wheels.stop()
@@ -179,31 +181,31 @@ def pick_up_block(rotate,distance_cm,depo):
 def drop_off_block(distance_cm):
         detach_junction_interrupts()
     #if distance_sensor.read() < distance_cm: #we may not need this
-        detach_turning_interrupts()
+        detach_polling()
         wheels.stop()
         sleep(1)
         actuator.extend()
         sleep(1)
         actuator.retract()
         sleep(1)
-        attach_turning_interrupts()
+        attach_polling()
         attach_junction_interrupts()
         # rotate(direction="left",angle=180)
 
-def last_action():
-    wheels.stop()
-    while button.value() == 0:
-        pass
-    navigate(test_route_Ad1)
+#def last_action():
+    #wheels.stop()
+    #while button.value() == 0:
+        #pass
+    #navigate(test_route_Ad1)
 
 #route for testing from depot 1 to A
 test_route_d1A = [[(1,0),lambda:rotate(direction="left")], [(1,0),None], [(0,1),lambda:rotate(direction="right")],[(1,1),wheels.stop]]
 #test_route_Ad1 = [[None,None,line_following], [None, rotate_180, line_following],[None, rotate_left, line_following],[None,None,line_following],[None, rotate_right, wheels.stop]]
 
 navigate(test_route_d1A)
-routes=[]
+
 def main():
-    navigate(start_to_D1)
+    navigate(route[0])
     n=4
     for i in range(n):
         pick_up_block()
