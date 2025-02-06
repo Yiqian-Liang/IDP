@@ -55,4 +55,3 @@ Dd1 = [[None, None, line_following],
        [None, None, pickup]]
 
 
-navigate(route_d1A)
