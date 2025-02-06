@@ -81,7 +81,7 @@ def rotate_180(direction = 1, speed = 60):
 
 def pickup():
     while True :
-        line_following()
+        line_following(speed=10)
         destination = code_reader.read_qr_code()
         if destination :
             rotate_180()
