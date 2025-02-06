@@ -13,10 +13,18 @@ sensors=[LineSensor(12),LineSensor(13),LineSensor(14),LineSensor(15)]
 direction=0
 forward_speed=80
 rotate_speed=60
-routes=[{"start_to_D1":[],"A":[[(1,0),lambda:rotate(direction="left")], [(1,0),None], [(0,1),lambda:rotate(direction="right")],[(1,1),wheels.stop],[(0,0),wheels.stop],[]]}]#use dict the first list value of the list is D1 to destination, the second list is D2 to destination, the third is destination D1 the forth is destination to D2, and so on
+Ad1 = [[None,None, line_following],
+        [None, rotate_left, line_following],
+        [None,None,line_following],
+        [None, rotate_right, pickup]]
+
+routes=[{"start_to_D1":[],
+"A":[[(1,0),lambda:rotate(direction="left")], [(1,0),None], [(0,1),lambda:rotate(direction="right")],[(1,1),wheels.stop],[(0,0),wheels.stop]],[]}]#use dict the first list value of the list is D1 to destination, the second is destination to D1 the third list is D2 to destination, the forth is destination to D2, and so on
 button = Pin(22, Pin.IN, Pin.PULL_DOWN)
 poll_timer=Timer(-1)
-
+rpm_full_load=40
+d_wheel=6.5/100 #in meters
+D=0.19 #in meters ditance between the wheels
 
 def junction_detected(pin):
     global junction_flag
@@ -61,15 +69,7 @@ def detach_junction_interrupts():
     sensors[0].pin.irq(trigger = Pin.IRQ_RISING, handler = None)
     sensors[-1].pin.irq(trigger = Pin.IRQ_RISING, handler = None)
 
-# def attach_turning_interrupts(timer=None):
-#     sensors[1].pin.irq(trigger=Pin.IRQ_RISING, handler=turning)
-#     sensors[2].pin.irq(trigger=Pin.IRQ_RISING, handler=turning)
-# def detach_turning_interrupts():
-#     sensors[1].pin.irq(trigger = Pin.IRQ_RISING, handler = None)
-#     sensors[2].pin.irq(trigger = Pin.IRQ_RISING, handler = None)
-
-def safety_check(junction):
-    #simple check if the junction matches what we expect
+def safety_check(junction):#simple check if the junction matches what we expect
     if (sensors[0] == junction [0]) and (sensors[-1] == junction[-1]): #use 1 to represent error
         return 0
     else:
@@ -83,6 +83,8 @@ def rotate(direction,speed=rotate_speed,angle=90):
         #print("Junction detected, turning...")
         detach_junction_interrupts()
         detach_polling() #may not need this
+        rpm=speed*rpm_full_load/100
+        w_wheel=rpm*2*3.14/60
         v_wheel=d_wheel*w_wheel/2
         w_ic=2*v_wheel/D
         time=angle*3.14*0.9/(180*w_ic) #leave some room for adjustment       
@@ -158,7 +160,7 @@ def navigate(route):
             #     wheels.forward() 
 
 
-def pick_up_block(depo, distance_cm=5):
+def pick_up_block(depo,distance_cm=5):
     detach_junction_interrupts()   
     while distance_sensor.read() >= distance_cm:
         line_following()
@@ -183,7 +185,7 @@ def pick_up_block(depo, distance_cm=5):
         #     rotate(direction="left",angle=180)
     return data
 
-def drop_off_block(distance_cm):
+def drop_off(distance_cm):
         detach_junction_interrupts()
     #if distance_sensor.read() < distance_cm: #we may not need this
         detach_polling()
@@ -211,25 +213,25 @@ test_route_d1A = [[(1,0),lambda:rotate(direction="left")], [(1,0),None], [(0,1),
 navigate(test_route_d1A)
 
 def main():
-    navigate(route["start_to_D1"])
+    navigate(routes["start_to_D1"])
     n=4
     for i in range(n):
         data=pick_up_block(depo=1)
-        navigate(route[data][0])
+        navigate(routes[data][0])
         drop_off()
         sleep(2) 
         if i<n-1:
-            navigate(route[data][2])
+            navigate(routes[data][2])
         else:
-           navigate(route[data][3])
+           navigate(routes[data][3])
     for i in range(n):
         data=pick_up_block(depo=1)
-        navigate(route[data][0])
+        navigate(routes[data][0])
         drop_off()
         sleep(2) 
         if i<n-1:
-            navigate(route[data][2])
+            navigate(routes[data][2])
         else:
-           navigate(route[data][3])
+           navigate(routes[data][3])
 if __name__ == "__main__":
     main()
