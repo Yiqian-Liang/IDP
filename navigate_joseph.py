@@ -57,6 +57,7 @@ def navigate(route):
         #When junction flag == 1
         if junction_flag == 1:
             #increment step (i.e. first step will be 0)
+            print('junction detected')
             cur_step += 1
             #Temporarily unnattach interrupts
             sensors[0].pin.irq(trigger = Pin.IRQ_RISING, handler = None)
@@ -75,6 +76,7 @@ def navigate(route):
                 route[cur_step][1]()
     
         else:
+            print('exited junction')
             if cur_step == n_steps - 1:
                 #if it's the last action don't reset the juunction flag
                 route[cur_step][2]()
