@@ -6,7 +6,7 @@ import struct
 #Distance Sensor VL53L0X with Pico
 #accurate range ~50-60cm ~2.5cm larger than the actual distance,returns distance in mm, converting to cm in 1 decimal
 class DistanceSensor:
-    def __init__(self, i2c=I2C(1, scl=Pin(11), sda=Pin(10), freq=400000)):
+    def __init__(self, i2c=I2C(1, scl=Pin(4), sda=Pin(3), freq=400000)):
         self.i2c = i2c
         self.tof = vl53l0x.VL53L0X(i2c)
 
@@ -28,7 +28,7 @@ class QRCodeReader:
     I2C_FORMAT = LENGTH_FORMAT + MESSAGE_FORMAT
     I2C_BYTE_COUNT = struct.calcsize(I2C_FORMAT)
 
-    def __init__(self, scl_pin=9, sda_pin=8, freq=400000):
+    def __init__(self, scl_pin=4, sda_pin=3, freq=400000):
         """Initialize I2C communication with the QR Code Reader."""
         self.i2c = machine.I2C(0, scl=machine.Pin(scl_pin), sda=machine.Pin(sda_pin), freq=freq)
 
