@@ -13,7 +13,7 @@ class QRCodeReader:
     I2C_FORMAT = LENGTH_FORMAT + MESSAGE_FORMAT
     I2C_BYTE_COUNT = struct.calcsize(I2C_FORMAT)
 
-    def __init__(self, scl_pin=1, sda_pin=0, freq=400000):
+    def __init__(self, scl_pin=9, sda_pin=8, freq=400000):
         """Initialize I2C communication with the QR Code Reader."""
         self.i2c = machine.I2C(0, scl=machine.Pin(scl_pin), sda=machine.Pin(sda_pin), freq=freq)
 
