@@ -1,20 +1,22 @@
 from motor import Wheel, Actuator  # Import the Wheel and Actuator classes
 from time import sleep 
-from code_reader import QRCodeReader
-from line_sensor import LineSensor
-from distance_sensor import DistanceSensor
+from sensors import QRCodeReader, DistanceSensor, LineSensor, LED, Button
 from machine import Pin, PWM, I2C
 from navigate_joseph import navigate
 from  routes import *
-#import math
-current_box_location = 1
-distance_sensor=DistanceSensor()
-code_reader=QRCodeReader()
+
+#---------------------- Set up motors
 wheels = Wheel((4,5),(7,6)) # Initialize the wheels (GP4, GP5 for left wheel, GP7, GP6 for right wheel) before the order was wrong
 actuator = Actuator(8, 9) # Initialize linear actuator (GP8 for direction, GP9 for PWM control)
-# message_string=QRCodeReader.read_qr_code()
-# destination=QRCodeReader.parse_qr_data(message_string)
-sensors=[LineSensor(12),LineSensor(13),LineSensor(14),LineSensor(15)]
+
+#-----------------------Set up sensors
+distance_sensor=DistanceSensor()
+code_reader=QRCodeReader()
+sensors=[LineSensor(18),LineSensor(19),LineSensor(20),LineSensor(21)]
+push_button = Button(pin = 14)
+crash_sensor = Button(pin = 12)
+Set_LED = LED(pin = 17)
+
 #go to depot ->use distance sensor to detect distance->scan QR code->pick up->navigate to destination->drop off->go back to depot  (during this have some number n to record the number of boxes loaded)->depo2
 def sensor_status():
     status=[]

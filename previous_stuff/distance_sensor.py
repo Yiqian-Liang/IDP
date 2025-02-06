@@ -4,7 +4,7 @@ from machine import Pin, I2C
 import time
 import vl53l0x
 class DistanceSensor:
-    def __init__(self, i2c=I2C(1, scl=Pin(3), sda=Pin(2), freq=400000)):
+    def __init__(self, i2c=I2C(1, scl=Pin(11), sda=Pin(10), freq=400000)):
         self.i2c = i2c
         self.tof = vl53l0x.VL53L0X(i2c)
 
