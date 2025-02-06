@@ -4,7 +4,7 @@ from navigate_joseph import navigate, last_action
 wheels = Wheel((4,5),(7,6))
 
 #route from start box to depot 1
-startd1 = [[None, None, wheels.forward], 
+startd1 = [[None, None, line_following], 
             [None, None, line_following],
             [None, rotate_right, line_following],
             [None, rotate_right, pickup]]
