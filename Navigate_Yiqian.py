@@ -20,20 +20,20 @@ routes = {
         [(1, 1), None],  # Move straight from start position
         [(1, 1), lambda: rotate(direction="right")],  # Turn left at the first junction
         [(1, 1), lambda: rotate(direction="right")],  # Turn right at the second junction
-        [(0, 0), wheels.stop]  # Stop at D1
+        #[(0, 0), wheels.stop]  # Stop at D1
     ],
     "A": [
         [  # D1 to A
             [(1, 0), lambda: rotate(direction="left")],
             [(1, 0), None],
             [(0, 1), lambda: rotate(direction="right")],
-            [(1, 1), wheels.stop]
+            #[(1, 1), wheels.stop]
         ],
         [  # A to D1
             [(1, 1), lambda: rotate(direction="left")],
             [(0, 1), None],
             [(0, 1), lambda: rotate(direction="right")],
-            [(0, 0), wheels.stop]
+            #[(0, 0), wheels.stop]
         ],
         [  # D2 to A
             [(0, 1), lambda: rotate(direction="right")],
@@ -43,7 +43,7 @@ routes = {
         [  # A to D2
             [(1, 1), lambda: rotate(direction="right")],
             [(1, 0), lambda: rotate(direction="left")],
-            [(0, 0), wheels.stop]
+            #[(0, 0), wheels.stop]
         ]
     ],
     "B": [
@@ -57,7 +57,7 @@ routes = {
             [(1, 1), lambda: rotate(direction="right")],
             [(1, 1), lambda: rotate(direction="right")],
             [(0, 1), None],
-            [(0, 0), wheels.stop]
+            #[(0, 0), wheels.stop]
         ],
         [  # D2 to B
             [(0, 1), None],
@@ -71,7 +71,7 @@ routes = {
             [(0, 1), None],
             [(0, 1), lambda: rotate(direction="left")],
             [(0, 1), None],
-            [(0, 0), wheels.stop]
+            #[(0, 0), wheels.stop]
         ]
     ],
     "C": [
@@ -90,7 +90,7 @@ routes = {
             [(0, 1), lambda: rotate(direction="right")],
             [(1, 0), None],
             [(1, 0), lambda: rotate(direction="right")],
-            [(0, 0), wheels.stop]
+            #[(0, 0), wheels.stop]
         ],
         [  # D2 to C
             [(0, 1), lambda: rotate(direction="right")],
@@ -106,7 +106,7 @@ routes = {
             [(1, 0), lambda: rotate(direction="right")],
             [(1, 0), None],
             [(1, 0), lambda: rotate(direction="right")],
-            [(0, 0), wheels.stop]
+            #[(0, 0), wheels.stop]
         ]
     ],
     "D": [
@@ -124,7 +124,7 @@ routes = {
             [(1, 0), lambda: rotate(direction="left")],
             [(1, 0), None],
             [(1, 0), lambda: rotate(direction="right")],
-            [(0, 0), wheels.stop]
+            #[(0, 0), wheels.stop]
         ],
         [  # D2 to D
             [(0, 1), lambda: rotate(direction="right")],
@@ -140,7 +140,7 @@ routes = {
             [(1, 0), lambda: rotate(direction="left")],
             [(1, 0), None],
             [(1, 0), lambda: rotate(direction="right")],
-            [(0, 0), wheels.stop]
+            #[(0, 0), wheels.stop]
         ]
     ]
 }
@@ -263,7 +263,7 @@ def navigate(route):
     #     #First step just run continuous action
     #     route[cur_step][2]()
 
-    while cur_step < n_steps-1:
+    while cur_step < n_steps:
         #When junction flag == 1
         #some sample route eg  [[(1,0),rotate_left], [(1,0),None], [(0,1),rotate_right()],[(1,1),wheels.stop]]
         if junction_flag == 1:
@@ -287,6 +287,8 @@ def navigate(route):
                 wheels.stop()
             else:
                 line_following()
+    wheels.stop()
+    sleep(1)
             # if turning_direction == 1:
             #     wheels.turn_left()
             # elif turning_direction == 2:    
