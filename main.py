@@ -145,8 +145,6 @@ routes = {
     ]
 }
 
-
-
 # Use dict: 
 # - The first list is from D1 to the destination.
 # - The second list is from the destination to D1.
@@ -155,7 +153,6 @@ routes = {
 
 button = Pin(22, Pin.IN, Pin.PULL_DOWN)
 
-poll_timer=Timer(-1)
 rpm_full_load=40
 d_wheel=6.5/100 #in meters
 D=0.19 #in meters ditance between the wheels
@@ -167,31 +164,12 @@ def junction_detected(pin):
 # Timer callback for polling sensor status during line following.
 # This callback checks the two middle sensors (sensors[1] and sensors[2])
 # and sets the global 'direction' accordingly.
-def sensor_callback(timer):
-    global direction
-    # If sensor[1] reads 1 and sensor[2] reads 0, then set direction to left.
-    if sensors[1].read() == 1 and sensors[2].read() == 0:
-        direction = 1
-    # If sensor[2] reads 1 and sensor[1] reads 0, then set direction to right.
-    elif sensors[2].read() == 1 and sensors[1].read() == 0:
-        direction = 2
-    else:
-        direction = 0
-
-# Functions to attach and detach the polling timer
-def attach_polling():
-    poll_timer.init(period=1, mode=Timer.PERIODIC, callback=sensor_callback)
-
-def detach_polling():
-    poll_timer.deinit()
-    direction=0
 
 # Simplified line following function that uses the global 'direction'
 def line_following():
-    attach_polling()
-    if direction == 1:
+    if sensors[2].read() == 1:
         wheels.turn_left()
-    elif direction == 2:
+    elif sensors[1].read() == 1:
         wheels.turn_right()
     else:
         wheels.forward()
@@ -227,18 +205,15 @@ def rotate(direction,speed=rotate_speed,angle=90):
         sleep(1)  # Short delay for stability
         wheels.rotate_left(speed)
         sleep(time) #rotate long enough first to make sure the car deviate enough
-        #start_time = time.time()  # Start timing turn
-        #Or attach all interrupts here, not sure
-        attach_polling()
         if direction == "left":
             wheels.rotate_left(speed)
-            if direction == 2:
+            if sensors[2].read() == 2:
                 wheels.stop()
                 sleep(1)
                 #attach_junction_interrupts() 
         elif direction == "right":
             wheels.rotate_right(speed)
-            if direction == 1:
+            if sensors[1].read() == 1:
                 wheels.stop()
                 sleep(1)
                 #attach_junction_interrupts()
