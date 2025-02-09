@@ -1,15 +1,29 @@
 from motor import Wheel, Actuator  # Import the Wheel and Actuator classes
 from time import sleep 
-from code_reader import QRCodeReader
-from line_sensor import LineSensor
-from distance_sensor import DistanceSensor
+from sensors import QRCodeReader, DistanceSensor, LineSensor, LED, Button
 from machine import Pin, PWM, I2C,Timer
 
+#---------------------- Set up motors
+wheels = Wheel((4,5),(7,6)) # Initialize the wheels (GP4, GP5 for left wheel, GP7, GP6 for right wheel) before the order was wrong
+actuator = Actuator(8, 9) # Initialize linear actuator (GP8 for direction, GP9 for PWM control)
+
+#-----------------------Set up sensors
+distance_sensor=DistanceSensor()
+code_reader=QRCodeReader()
+sensors=[LineSensor(18),LineSensor(19),LineSensor(20),LineSensor(21)]
+button = Button(pin = 14) #push button
+crash_sensor = Button(pin = 12)
+Set_LED = LED(pin = 17)
+
+'''
+#These assignments are outdated - the new configuration as per Owen's circuit board is above
 distance_sensor=DistanceSensor()
 code_reader=QRCodeReader()
 wheels = Wheel((7,6),(4,5)) #wheels changed # Initialize the wheels (GP4, GP5 for left wheel, GP7, GP6 for right wheel) before the order was wrong
 actuator = Actuator(8, 9) # Initialize linear actuator (GP8 for direction, GP9 for PWM control)
 sensors=[LineSensor(12),LineSensor(13),LineSensor(14),LineSensor(15)]
+'''
+
 direction=0
 forward_speed=80
 rotate_speed=60
@@ -151,7 +165,7 @@ routes = {
 # - The third list is from D2 to the destination.
 # - The fourth list is from the destination to D2, and so on.
 
-button = Pin(22, Pin.IN, Pin.PULL_DOWN)
+#button = Pin(22, Pin.IN, Pin.PULL_DOWN) #now included at top with other sensors
 
 rpm_full_load=40
 d_wheel=6.5/100 #in meters
@@ -314,19 +328,29 @@ def drop_off(distance_cm):
         attach_junction_interrupts()
         # rotate(direction="left",angle=180)
 
-#def last_action():
-    #wheels.stop()
-    #while button.value() == 0:
-        #pass
-    #navigate(test_route_Ad1)
+def attach_button_interrupt():
+    button.pin.irq(trigger = Pin.IRQ_RISING, handler = button_reset)
+def detach_button_interrupt():
+    button.pin.irq(trigger = Pin.IRQ_RISING, handler = None)
 
-#route for testing from depot 1 to A
-test_route_d1A = [[(1,0),lambda:rotate(direction="left")], [(1,0),None], [(0,1),lambda:rotate(direction="right")],[(1,1),wheels.stop],[(0,0),wheels.stop]]
-#test_route_Ad1 = [[None,None,line_following], [None, rotate_180, line_following],[None, rotate_left, line_following],[None,None,line_following],[None, rotate_right, wheels.stop]]
-
-navigate(test_route_d1A)
+def button_reset():
+    '''Can be pushed at any time to stop the robot, 
+    then waits until robot is moved and replaced at start, then restarts code'''
+    detach_button_interrupt()
+    LED.stop_flash() #since won't be driving anymore
+    wheels.stop()
+    sleep(1) #definitely prevents bouncing
+    while button.value() == 0:
+        pass
+    main() #go back to start of program
 
 def main():
+    #Wait until button is pushed to start
+    while button.value() == 0:
+        pass
+
+    LED.start_flash() #starts flashing as soon as starts first route
+
     navigate(routes["start_to_D1"])
     n=4
     for i in range(n):
@@ -347,5 +371,6 @@ def main():
             navigate(routes[data][2])
         else:
            navigate(routes["D2_to_start"])
+           LED.stop_flash() #stops flashing as soon as finished last route
 if __name__ == "__main__":
     main()
