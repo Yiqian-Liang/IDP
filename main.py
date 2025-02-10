@@ -302,7 +302,7 @@ def button_reset():
     LED.stop_flash() #since won't be driving anymore
     wheels.stop()
     sleep(1) #definitely prevents bouncing
-    while button.value() == 0:
+    while button.read() == 0:
         pass
     main() #go back to start of program
 
@@ -356,10 +356,12 @@ def main():
     while button.value() == 0:
         pass
 
+    attach_button_interrupt()
+
     LED.start_flash() #starts flashing as soon as starts first route
     while True:
         line_following()
-    
+        
     navigate(routes["A"][0])
     navigate(routes["A"][1])
     print("code_reader.read()=",code_reader.read())
