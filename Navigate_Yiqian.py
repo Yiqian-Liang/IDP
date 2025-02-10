@@ -1,19 +1,33 @@
 from motor import Wheel, Actuator  # Import the Wheel and Actuator classes
 from time import sleep 
-from code_reader import QRCodeReader
-from line_sensor import LineSensor
-from distance_sensor import DistanceSensor
+from sensors import QRCodeReader, DistanceSensor, LineSensor, LED, Button
 from machine import Pin, PWM, I2C,Timer
 
+#---------------------- Set up motors
+wheels = Wheel((7,6),(4,5)) # Initialize the wheels (GP4, GP5 for left wheel, GP7, GP6 for right wheel) before the order was wrong
+actuator = Actuator(8, 9) # Initialize linear actuator (GP8 for direction, GP9 for PWM control)
+
+#-----------------------Set up sensors
+distance_sensor=DistanceSensor()
+code_reader=QRCodeReader()
+sensors=[LineSensor(18),LineSensor(19),LineSensor(20),LineSensor(21)]
+button = Button(pin = 14) #push button
+crash_sensor = Button(pin = 12)
+Set_LED = LED(pin = 17)
+
+'''
+#These assignments are outdated - the new configuration as per Owen's circuit board is above
 distance_sensor=DistanceSensor()
 code_reader=QRCodeReader()
 wheels = Wheel((7,6),(4,5)) #wheels changed # Initialize the wheels (GP4, GP5 for left wheel, GP7, GP6 for right wheel) before the order was wrong
 actuator = Actuator(8, 9) # Initialize linear actuator (GP8 for direction, GP9 for PWM control)
 sensors=[LineSensor(12),LineSensor(13),LineSensor(14),LineSensor(15)]
+'''
+
 direction=0
 forward_speed=80
 rotate_speed=60
-
+forward_distance=5/100 #5cm
 routes = {
     "D2_to_start": [],
     "start_to_D1": [
@@ -85,67 +99,62 @@ routes = {
             [(1, 1), wheels.stop]
         ],
         [  # C to D1
-            [(1, 1), lambda: rotate(direction="right")],
             [(1, 1), lambda: rotate(direction="left")],
-            [(0, 1), lambda: rotate(direction="right")],
-            [(1, 0), None],
+            [(1, 1), lambda: rotate(direction="right")],
+            [(0, 1), None],
             [(1, 0), lambda: rotate(direction="right")],
+            [(0, 1), None],
+            [(0, 1), None],
             #[(0, 0), wheels.stop]
         ],
         [  # D2 to C
+            [(0, 1), None],
             [(0, 1), lambda: rotate(direction="right")],
             [(1, 0), lambda: rotate(direction="left")],
-            [(1, 0), None],
             [(1, 0), lambda: rotate(direction="left")],
-            [(0, 1), lambda: rotate(direction="right")],
             [(1, 1), wheels.stop]
         ],
         [  # C to D2
             [(1, 1), lambda: rotate(direction="right")],
-            [(0, 1), lambda: rotate(direction="left")],
-            [(1, 0), lambda: rotate(direction="right")],
-            [(1, 0), None],
-            [(1, 0), lambda: rotate(direction="right")],
+            [(1, 1), lambda: rotate(direction="right")],
+            [(1, 1), lambda: rotate(direction="left")],
+            [(0, 1), None],
             #[(0, 0), wheels.stop]
         ]
     ],
     "D": [
         [  # D1 to D
+            [(1, 0), None],
+            [(1, 0), None],
             [(1, 0), lambda: rotate(direction="left")],
-            [(1, 0), None],
-            [(1, 0), lambda: rotate(direction="right")],
-            [(1, 0), None],
-            [(0, 1), lambda: rotate(direction="right")],
+            [(1, 0), lambda: rotate(direction="left")],
             [(1, 1), wheels.stop]
         ],
         [  # D to D1
-            [(1, 1), lambda: rotate(direction="left")],
+            [(1, 1), lambda: rotate(direction="right")],
+            [(0, 1), lambda: rotate(direction="right")],
             [(0, 1), None],
-            [(1, 0), lambda: rotate(direction="left")],
-            [(1, 0), None],
-            [(1, 0), lambda: rotate(direction="right")],
+            [(0, 1), None],
             #[(0, 0), wheels.stop]
         ],
         [  # D2 to D
+            [(0, 1), None],
+            [(0, 1), None],
             [(0, 1), lambda: rotate(direction="right")],
-            [(1, 0), lambda: rotate(direction="left")],
-            [(1, 0), None],
-            [(1, 0), lambda: rotate(direction="right")],
+            [(0, 1), None],
             [(0, 1), lambda: rotate(direction="right")],
             [(1, 1), wheels.stop]
         ],
         [  # D to D2
-            [(1, 1), lambda: rotate(direction="right")],
-            [(0, 1), lambda: rotate(direction="left")],
+            [(1, 1), lambda: rotate(direction="left")],
+            [(1, 0), None],
             [(1, 0), lambda: rotate(direction="left")],
             [(1, 0), None],
-            [(1, 0), lambda: rotate(direction="right")],
+            [(1, 0), None],
             #[(0, 0), wheels.stop]
         ]
     ]
 }
-
-
 
 # Use dict: 
 # - The first list is from D1 to the destination.
@@ -153,46 +162,24 @@ routes = {
 # - The third list is from D2 to the destination.
 # - The fourth list is from the destination to D2, and so on.
 
-button = Pin(22, Pin.IN, Pin.PULL_DOWN)
-
-poll_timer=Timer(-1)
-rpm_full_load=40
-d_wheel=6.5/100 #in meters
-D=0.19 #in meters ditance between the wheels
+#button = Pin(22, Pin.IN, Pin.PULL_DOWN) #now included at top with other sensors
 
 def junction_detected(pin):
     global junction_flag
-    junction_flag = 1  # Set the flag when an interrupt occurs
+    if pin == sensors[0].pin:
+        sensors[0].pin.irq(trigger = Pin.IRQ_RISING, handler = None)
+        junction_flag = 1  
 
 # Timer callback for polling sensor status during line following.
 # This callback checks the two middle sensors (sensors[1] and sensors[2])
 # and sets the global 'direction' accordingly.
-def sensor_callback(timer):
-    global direction
-    # If sensor[1] reads 1 and sensor[2] reads 0, then set direction to left.
-    if sensors[1].read() == 1 and sensors[2].read() == 0:
-        direction = 1
-    # If sensor[2] reads 1 and sensor[1] reads 0, then set direction to right.
-    elif sensors[2].read() == 1 and sensors[1].read() == 0:
-        direction = 2
-    else:
-        direction = 0
-
-# Functions to attach and detach the polling timer
-def attach_polling():
-    poll_timer.init(period=1, mode=Timer.PERIODIC, callback=sensor_callback)
-
-def detach_polling():
-    poll_timer.deinit()
-    direction=0
 
 # Simplified line following function that uses the global 'direction'
 def line_following():
-    attach_polling()
-    if direction == 1:
-        wheels.turn_left()
-    elif direction == 2:
+    if sensors[2].read() == 1:
         wheels.turn_right()
+    elif sensors[1].read() == 1:
+        wheels.turn_left()
     else:
         wheels.forward()
 
@@ -216,32 +203,36 @@ def rotate(direction,speed=rotate_speed,angle=90):
     # if status[0] == 1 or status[-1] == 1:
         #print("Junction detected, turning...")
         detach_junction_interrupts()
-        detach_polling() #may not need this
+        #detach_polling() #may not need this
         rpm=speed*rpm_full_load/100
         w_wheel=rpm*2*3.14/60
         v_wheel=d_wheel*w_wheel/2
         #w_ic=2*v_wheel/D
         w_ic=v_wheel/D
-        time=angle*3.14*0.9/(180*w_ic) #leave some room for adjustment       
+        time=angle*3.14*0.4/(180*w_ic) #leave some room for adjustment
+        forward_time=forward_distance/v_wheel
+        print(time)
         wheels.stop()  # Stop before turning
-        sleep(1)  # Short delay for stability
-        wheels.rotate_left(speed)
-        sleep(time) #rotate long enough first to make sure the car deviate enough
-        #start_time = time.time()  # Start timing turn
-        #Or attach all interrupts here, not sure
-        attach_polling()
+        sleep(3)  # Short delay for stability
+        wheels.forward(speed)  # Start moving forward
+        sleep(forward_time)
+        wheels.stop()
+        sleep(3)
         if direction == "left":
             wheels.rotate_left(speed)
-            if direction == 2:
-                wheels.stop()
-                sleep(1)
+            sleep(time)
+            while sensors[2].read() != 1:
+                wheels.rotate_left(speed)
+            wheels.stop()
+            sleep(3)               
                 #attach_junction_interrupts() 
         elif direction == "right":
             wheels.rotate_right(speed)
-            if direction == 1:
-                wheels.stop()
-                sleep(1)
-                #attach_junction_interrupts()
+            sleep(time)
+            while sensors[1].read() != 1:
+                wheels.rotate_right(speed)
+            wheels.stop()
+            sleep(3)    
 
 def navigate(route):
     n_steps = len(route)
@@ -254,9 +245,8 @@ def navigate(route):
 
     #Assign interrupts that set the flag to be 1 if either sensor detects a line
     attach_junction_interrupts()
-    #attach_polling()
 
-    while button.value() == 0:
+    while button.read() == 0:
         pass
 
     # while junction_flag == 0:
@@ -264,37 +254,58 @@ def navigate(route):
     #     route[cur_step][2]()
 
     while cur_step < n_steps:
-        #When junction flag == 1
-        #some sample route eg  [[(1,0),rotate_left], [(1,0),None], [(0,1),rotate_right()],[(1,1),wheels.stop]]
         if junction_flag == 1:
-            #increment step (i.e. first step will be 0)           
-            #Temporarily detach interrupts
+            print(junction_flag)
+            wheels.stop()
+            sleep(1)
+            # while safety_check(route[cur_step][0]): #safety check fails
+            #     junction_flag = 0
+            #     line_following()
+            #     if junction_flag == 1:
+            #         continue
+            #     pass
             detach_junction_interrupts()
-            detach_polling()
+            #detach_polling()
             junction_flag = 0
-            while safety_check(route[cur_step][0]): #safety check fails
-                line_following()
-                pass
             if route[cur_step][1] is not None:
                 route[cur_step][1]()
                 cur_step += 1
+                attach_junction_interrupts()
             else:
                 line_following()
+                attach_junction_interrupts()
                 cur_step += 1
         else:
             #may just use the line following function here
-            if distance_sensor.read() < 10: #extra safety not to crash
-                wheels.stop()
-            else:
-                line_following()
+#             if distance_sensor.read() < 10: #extra safety not to crash
+#                 wheels.stop()
+#             else:
+            line_following()
     wheels.stop()
     sleep(1)
-            # if turning_direction == 1:
-            #     wheels.turn_left()
-            # elif turning_direction == 2:    
-            #     wheels.turn_right()
-            # else:
-            #     wheels.forward() 
+
+# Timer callback for polling sensor status during line following.
+# This callback checks the two middle sensors (sensors[1] and sensors[2])
+# and sets the global 'direction' accordingly.
+
+
+
+def attach_button_interrupt():
+    button.pin.irq(trigger = Pin.IRQ_RISING, handler = button_reset)
+def detach_button_interrupt():
+    button.pin.irq(trigger = Pin.IRQ_RISING, handler = None)
+
+def button_reset():
+    '''Can be pushed at any time to stop the robot, 
+    then waits until robot is moved and replaced at start, then restarts code'''
+    detach_button_interrupt()
+    LED.stop_flash() #since won't be driving anymore
+    wheels.stop()
+    sleep(1) #definitely prevents bouncing
+    while button.value() == 0:
+        pass
+    main() #go back to start of program
+
 
 
 def pick_up_block(depo,distance_cm=5):
@@ -335,23 +346,25 @@ def drop_off(distance_cm):
         wheels.reverse()
         sleep(1) #need to adjust sleep time
         rotate(direction="right",angle=180) #left right both okay
-        attach_polling()
         attach_junction_interrupts()
         # rotate(direction="left",angle=180)
 
-#def last_action():
-    #wheels.stop()
-    #while button.value() == 0:
-        #pass
-    #navigate(test_route_Ad1)
-
-#route for testing from depot 1 to A
-test_route_d1A = [[(1,0),lambda:rotate(direction="left")], [(1,0),None], [(0,1),lambda:rotate(direction="right")],[(1,1),wheels.stop],[(0,0),wheels.stop]]
-#test_route_Ad1 = [[None,None,line_following], [None, rotate_180, line_following],[None, rotate_left, line_following],[None,None,line_following],[None, rotate_right, wheels.stop]]
-
-navigate(test_route_d1A)
 
 def main():
+    #Wait until button is pushed to start
+    while button.value() == 0:
+        pass
+
+    LED.start_flash() #starts flashing as soon as starts first route
+    while True:
+        line_following()
+    actuator.extend()
+    
+    navigate(routes["A"][0])
+    navigate(routes["A"][1])
+    print("code_reader.read()=",code_reader.read())
+    pick_up_block(depo=1)
+    drop_off(distance_cm=10)
     navigate(routes["start_to_D1"])
     n=4
     for i in range(n):
@@ -372,5 +385,6 @@ def main():
             navigate(routes[data][2])
         else:
            navigate(routes["D2_to_start"])
+           LED.stop_flash() #stops flashing as soon as finished last route
 if __name__ == "__main__":
     main()
