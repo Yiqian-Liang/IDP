@@ -27,7 +27,7 @@ sensors=[LineSensor(12),LineSensor(13),LineSensor(14),LineSensor(15)]
 direction=0
 forward_speed=80
 rotate_speed=60
-
+forward_distance=5/100 #5cm
 routes = {
     "D2_to_start": [],
     "start_to_D1": [
@@ -164,10 +164,6 @@ routes = {
 
 #button = Pin(22, Pin.IN, Pin.PULL_DOWN) #now included at top with other sensors
 
-rpm_full_load=40
-d_wheel=6.5/100 #in meters
-D=0.19 #in meters ditance between the wheels
-
 def junction_detected(pin):
     global junction_flag
     junction_flag = 1  # Set the flag when an interrupt occurs
@@ -179,9 +175,9 @@ def junction_detected(pin):
 # Simplified line following function that uses the global 'direction'
 def line_following():
     if sensors[2].read() == 1:
-        wheels.turn_left()
-    elif sensors[1].read() == 1:
         wheels.turn_right()
+    elif sensors[1].read() == 1:
+        wheels.turn_left()
     else:
         wheels.forward()
 
@@ -197,6 +193,8 @@ def safety_check(junction):#simple check if the junction matches what we expect
         return 0
     else:
         return 1
+
+
 def rotate(direction,speed=rotate_speed,angle=90):
     # status=sensor_status()
     # # Detect a junction (both left and right sensors detect the line)
@@ -207,25 +205,32 @@ def rotate(direction,speed=rotate_speed,angle=90):
         rpm=speed*rpm_full_load/100
         w_wheel=rpm*2*3.14/60
         v_wheel=d_wheel*w_wheel/2
-        w_ic=2*v_wheel/D
-        #w_ic=v_wheel/D
-        time=angle*3.14*1/(180*w_ic) #leave some room for adjustment
+        #w_ic=2*v_wheel/D
+        w_ic=v_wheel/D
+        time=angle*3.14*0.4/(180*w_ic) #leave some room for adjustment
+        forward_time=forward_distance/v_wheel
         print(time)
         wheels.stop()  # Stop before turning
         sleep(3)  # Short delay for stability
+        wheels.forward(speed)  # Start moving forward
+        sleep(forward_time)
+        wheels.stop()
+        sleep(3)
         if direction == "left":
             wheels.rotate_left(speed)
             sleep(time)
-            if sensors[2].read() == 2:
-                wheels.stop()
-                sleep(3)
+            while sensors[2].read() != 1:
+                wheels.rotate_left(speed)
+            wheels.stop()
+            sleep(3)               
                 #attach_junction_interrupts() 
         elif direction == "right":
             wheels.rotate_right(speed)
             sleep(time)
-            if sensors[1].read() == 1:
-                wheels.stop()
-                sleep(3)
+            while sensors[1].read() != 1:
+                wheels.rotate_right(speed)
+            wheels.stop()
+            sleep(3)    
 
 def navigate(route):
     n_steps = len(route)
@@ -238,9 +243,8 @@ def navigate(route):
 
     #Assign interrupts that set the flag to be 1 if either sensor detects a line
     attach_junction_interrupts()
-    #attach_polling()
 
-    while button.value() == 0:
+    while button.read() == 0:
         pass
 
     # while junction_flag == 0:
@@ -251,34 +255,57 @@ def navigate(route):
         #When junction flag == 1
         #some sample route eg  [[(1,0),rotate_left], [(1,0),None], [(0,1),rotate_right()],[(1,1),wheels.stop]]
         if junction_flag == 1:
-            #increment step (i.e. first step will be 0)           
-            #Temporarily detach interrupts
+            print(junction_flag)
+            wheels.stop()
+            sleep(1)
+            # while safety_check(route[cur_step][0]): #safety check fails
+            #     junction_flag = 0
+            #     line_following()
+            #     if junction_flag == 1:
+            #         continue
+            #     pass
             detach_junction_interrupts()
-            detach_polling()
+            #detach_polling()
             junction_flag = 0
-            while safety_check(route[cur_step][0]): #safety check fails
-                line_following()
-                pass
             if route[cur_step][1] is not None:
                 route[cur_step][1]()
                 cur_step += 1
+                attach_junction_interrupts()
             else:
                 line_following()
+                attach_junction_interrupts()
                 cur_step += 1
         else:
             #may just use the line following function here
-            if distance_sensor.read() < 10: #extra safety not to crash
-                wheels.stop()
-            else:
-                line_following()
+#             if distance_sensor.read() < 10: #extra safety not to crash
+#                 wheels.stop()
+#             else:
+            line_following()
     wheels.stop()
     sleep(1)
-            # if turning_direction == 1:
-            #     wheels.turn_left()
-            # elif turning_direction == 2:    
-            #     wheels.turn_right()
-            # else:
-            #     wheels.forward() 
+
+# Timer callback for polling sensor status during line following.
+# This callback checks the two middle sensors (sensors[1] and sensors[2])
+# and sets the global 'direction' accordingly.
+
+
+
+def attach_button_interrupt():
+    button.pin.irq(trigger = Pin.IRQ_RISING, handler = button_reset)
+def detach_button_interrupt():
+    button.pin.irq(trigger = Pin.IRQ_RISING, handler = None)
+
+def button_reset():
+    '''Can be pushed at any time to stop the robot, 
+    then waits until robot is moved and replaced at start, then restarts code'''
+    detach_button_interrupt()
+    LED.stop_flash() #since won't be driving anymore
+    wheels.stop()
+    sleep(1) #definitely prevents bouncing
+    while button.value() == 0:
+        pass
+    main() #go back to start of program
+
 
 
 def pick_up_block(depo,distance_cm=5):
@@ -323,21 +350,6 @@ def drop_off(distance_cm):
         attach_junction_interrupts()
         # rotate(direction="left",angle=180)
 
-def attach_button_interrupt():
-    button.pin.irq(trigger = Pin.IRQ_RISING, handler = button_reset)
-def detach_button_interrupt():
-    button.pin.irq(trigger = Pin.IRQ_RISING, handler = None)
-
-def button_reset():
-    '''Can be pushed at any time to stop the robot, 
-    then waits until robot is moved and replaced at start, then restarts code'''
-    detach_button_interrupt()
-    LED.stop_flash() #since won't be driving anymore
-    wheels.stop()
-    sleep(1) #definitely prevents bouncing
-    while button.value() == 0:
-        pass
-    main() #go back to start of program
 
 def main():
     #Wait until button is pushed to start
