@@ -15,19 +15,11 @@ button = Button(pin = 14) #push button
 crash_sensor = Button(pin = 12)
 Set_LED = LED(pin = 17)
 
-'''
-#These assignments are outdated - the new configuration as per Owen's circuit board is above
-distance_sensor=DistanceSensor()
-code_reader=QRCodeReader()
-wheels = Wheel((7,6),(4,5)) #wheels changed # Initialize the wheels (GP4, GP5 for left wheel, GP7, GP6 for right wheel) before the order was wrong
-actuator = Actuator(8, 9) # Initialize linear actuator (GP8 for direction, GP9 for PWM control)
-sensors=[LineSensor(12),LineSensor(13),LineSensor(14),LineSensor(15)]
-'''
 
 direction=0
 forward_speed=80
 rotate_speed=60
-forward_distance=5/100 #5cm
+forward_distance=2.5/100 #5cm
 routes = {
     "D2_to_start": [],
     "start_to_D1": [
@@ -194,7 +186,6 @@ def safety_check(junction):#simple check if the junction matches what we expect
     else:
         return 1
 
-
 def rotate(direction,speed=rotate_speed,angle=90):
     # status=sensor_status()
     # # Detect a junction (both left and right sensors detect the line)
@@ -239,17 +230,13 @@ def navigate(route):
     junction_flag = 0
 
     #Set up timer
-    tim = Timer()
+    #tim = Timer()
 
     #Assign interrupts that set the flag to be 1 if either sensor detects a line
     attach_junction_interrupts()
 
-    while button.read() == 0:
-        pass
-
-    # while junction_flag == 0:
-    #     #First step just run continuous action
-    #     route[cur_step][2]()
+    #while button.read() == 0:
+        #pass
 
     while cur_step < n_steps:
         #When junction flag == 1
@@ -288,13 +275,10 @@ def navigate(route):
 # This callback checks the two middle sensors (sensors[1] and sensors[2])
 # and sets the global 'direction' accordingly.
 
-
-
 def attach_button_interrupt():
     button.pin.irq(trigger = Pin.IRQ_RISING, handler = button_reset)
 def detach_button_interrupt():
     button.pin.irq(trigger = Pin.IRQ_RISING, handler = None)
-
 def button_reset():
     '''Can be pushed at any time to stop the robot, 
     then waits until robot is moved and replaced at start, then restarts code'''
@@ -306,13 +290,10 @@ def button_reset():
         pass
     main() #go back to start of program
 
-
-
 def pick_up_block(depo,distance_cm=5):
     detach_junction_interrupts()   
     while distance_sensor.read() >= distance_cm:
         line_following()
-    detach_polling()
     wheels.stop()
     while True:
         if (data := code_reader.read()) is not None:                
@@ -359,8 +340,6 @@ def main():
     attach_button_interrupt()
 
     LED.start_flash() #starts flashing as soon as starts first route
-    while True:
-        line_following()
         
     navigate(routes["A"][0])
     navigate(routes["A"][1])
@@ -388,5 +367,6 @@ def main():
         else:
            navigate(routes["D2_to_start"])
            LED.stop_flash() #stops flashing as soon as finished last route
+           
 if __name__ == "__main__":
     main()

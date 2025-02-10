@@ -6,7 +6,7 @@ import struct
 #Distance Sensor VL53L0X with Pico
 #accurate range ~50-60cm ~2.5cm larger than the actual distance,returns distance in mm, converting to cm in 1 decimal
 class DistanceSensor:
-    def __init__(self, i2c=I2C(1, scl=Pin(4), sda=Pin(3), freq=400000)):
+    def __init__(self, i2c=I2C(1, scl=Pin(15), sda=Pin(14), freq=400000)):
         self.i2c = i2c
         self.tof = vl53l0x.VL53L0X(i2c)
 

@@ -2,7 +2,7 @@ from motor import Wheel, Actuator  # Import the Wheel and Actuator classes
 from line_sensor import LineSensor
 from machine import Pin, PWM, I2C, Timer
 from time import sleep
-import routes
+import previous_stuff.routes_old as routes_old
 
 wheels = Wheel((4,5),(7,6))
 actuator = Actuator(8, 9) # Initialize linear actuator (GP8 for direction, GP9 for PWM control)
@@ -107,12 +107,12 @@ def start_robot():
     cur_location = None
     while button.value() == 0:
         pass
-    navigate(routes.startd1)
+    navigate(routes_old.startd1)
 
 def last_action():
     wheels.stop()
     while button.value() == 0:
         pass
-    navigate(routes.d1A)
+    navigate(routes_old.d1A)
 
 

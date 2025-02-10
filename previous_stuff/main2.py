@@ -3,7 +3,7 @@ from time import sleep
 from sensors import QRCodeReader, DistanceSensor, LineSensor, LED, Button
 from machine import Pin, PWM, I2C
 from navigate_joseph import navigate
-from  routes import *
+from  previous_stuff.routes_old import *
 
 #---------------------- Set up motors
 wheels = Wheel((4,5),(7,6)) # Initialize the wheels (GP4, GP5 for left wheel, GP7, GP6 for right wheel) before the order was wrong
