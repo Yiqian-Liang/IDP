@@ -5,13 +5,13 @@ from machine import Pin, PWM, I2C,Timer
 
 #---------------------- Set up motors
 wheels = Wheel((4,5),(7,6)) # Initialize the wheels (GP4, GP5 for left wheel, GP7, GP6 for right wheel) before the order was wrong
-actuator = Actuator(8, 9) # Initialize linear actuator (GP8 for direction, GP9 for PWM control)
+actuator = Actuator(2, 3) # Initialize linear actuator (GP8 for direction, GP9 for PWM control)
 
 #-----------------------Set up sensors
 distance_sensor=DistanceSensor()
 code_reader=QRCodeReader()
 sensors=[LineSensor(18),LineSensor(19),LineSensor(20),LineSensor(21)]
-button = Button(pin = 14) #push button
+button = Button(pin = 19) #push button
 crash_sensor = Button(pin = 12)
 Set_LED = LED(pin = 17)
 
