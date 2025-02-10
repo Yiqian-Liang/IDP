@@ -15,11 +15,19 @@ button = Button(pin = 14) #push button
 crash_sensor = Button(pin = 12)
 Set_LED = LED(pin = 17)
 
+'''
+#These assignments are outdated - the new configuration as per Owen's circuit board is above
+distance_sensor=DistanceSensor()
+code_reader=QRCodeReader()
+wheels = Wheel((7,6),(4,5)) #wheels changed # Initialize the wheels (GP4, GP5 for left wheel, GP7, GP6 for right wheel) before the order was wrong
+actuator = Actuator(8, 9) # Initialize linear actuator (GP8 for direction, GP9 for PWM control)
+sensors=[LineSensor(12),LineSensor(13),LineSensor(14),LineSensor(15)]
+'''
 
 direction=0
 forward_speed=80
 rotate_speed=60
-forward_distance=2.5/100 #5cm
+forward_distance=5/100 #5cm
 routes = {
     "D2_to_start": [],
     "start_to_D1": [
@@ -186,6 +194,7 @@ def safety_check(junction):#simple check if the junction matches what we expect
     else:
         return 1
 
+
 def rotate(direction,speed=rotate_speed,angle=90):
     # status=sensor_status()
     # # Detect a junction (both left and right sensors detect the line)
@@ -222,6 +231,29 @@ def rotate(direction,speed=rotate_speed,angle=90):
                 wheels.rotate_right(speed)
             wheels.stop()
             sleep(3)    
+def full_rotation(speed=rotate_speed,angle=180):
+    # status=sensor_status()
+    # # Detect a junction (both left and right sensors detect the line)
+    # if status[0] == 1 or status[-1] == 1:
+        #print("Junction detected, turning...")
+        detach_junction_interrupts()
+        #detach_polling() #may not need this
+        rpm=speed*rpm_full_load/100
+        w_wheel=rpm*2*3.14/60
+        v_wheel=d_wheel*w_wheel/2
+        w_ic=2*v_wheel/D
+        #w_ic=v_wheel/D
+        time=angle*3.14*0.8/(180*w_ic) #leave some room for adjustment
+        #forward_time=forward_distance/v_wheel
+        print(time)
+        wheels.stop()  # Stop before turning
+        sleep(3)  # Short delay for stability
+        wheels.full_rotation(speed)
+        sleep(time)
+        while sensors[1].read() != 1 and sensors[2].read() != 1:
+            wheels.full_rotation(speed)
+        wheels.stop()
+        sleep(3)
 
 def navigate(route):
     n_steps = len(route)
@@ -230,17 +262,19 @@ def navigate(route):
     junction_flag = 0
 
     #Set up timer
-    #tim = Timer()
+    tim = Timer()
 
     #Assign interrupts that set the flag to be 1 if either sensor detects a line
     attach_junction_interrupts()
 
-    #while button.read() == 0:
-        #pass
+    while button.read() == 0:
+        pass
+
+    # while junction_flag == 0:
+    #     #First step just run continuous action
+    #     route[cur_step][2]()
 
     while cur_step < n_steps:
-        #When junction flag == 1
-        #some sample route eg  [[(1,0),rotate_left], [(1,0),None], [(0,1),rotate_right()],[(1,1),wheels.stop]]
         if junction_flag == 1:
             print(junction_flag)
             wheels.stop()
@@ -275,10 +309,13 @@ def navigate(route):
 # This callback checks the two middle sensors (sensors[1] and sensors[2])
 # and sets the global 'direction' accordingly.
 
+
+
 def attach_button_interrupt():
     button.pin.irq(trigger = Pin.IRQ_RISING, handler = button_reset)
 def detach_button_interrupt():
     button.pin.irq(trigger = Pin.IRQ_RISING, handler = None)
+
 def button_reset():
     '''Can be pushed at any time to stop the robot, 
     then waits until robot is moved and replaced at start, then restarts code'''
@@ -286,9 +323,11 @@ def button_reset():
     LED.stop_flash() #since won't be driving anymore
     wheels.stop()
     sleep(1) #definitely prevents bouncing
-    while button.read() == 0:
+    while button.value() == 0:
         pass
     main() #go back to start of program
+
+
 
 def pick_up_block(depo,distance_cm=5):
     detach_junction_interrupts()   
@@ -306,7 +345,7 @@ def pick_up_block(depo,distance_cm=5):
         rotate(direction="right",angle=180)
         attach_junction_interrupts()
     elif depo==2:
-        rotate(direction="left",angle=180)
+        full_rotation()
         attach_junction_interrupts()
         # if depo==1:
         #     rotate(direction="right",angle=180)
@@ -326,8 +365,7 @@ def drop_off(distance_cm):
         sleep(1)
         wheels.reverse()
         sleep(1) #need to adjust sleep time
-        rotate(direction="right",angle=180) #left right both okay
-        attach_polling()
+        full_rotation() #left right both okay
         attach_junction_interrupts()
         # rotate(direction="left",angle=180)
 
@@ -337,10 +375,11 @@ def main():
     while button.value() == 0:
         pass
 
-    attach_button_interrupt()
-
     LED.start_flash() #starts flashing as soon as starts first route
-        
+    while True:
+        line_following()
+    actuator.extend()
+    
     navigate(routes["A"][0])
     navigate(routes["A"][1])
     print("code_reader.read()=",code_reader.read())
@@ -367,6 +406,5 @@ def main():
         else:
            navigate(routes["D2_to_start"])
            LED.stop_flash() #stops flashing as soon as finished last route
-           
 if __name__ == "__main__":
     main()
