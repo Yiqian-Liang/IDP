@@ -11,7 +11,7 @@ actuator = Actuator(2, 3) # Initialize linear actuator (GP8 for direction, GP9 f
 distance_sensor=DistanceSensor()
 code_reader=QRCodeReader()
 sensors=[LineSensor(18),LineSensor(19),LineSensor(20),LineSensor(21)]
-button = Button(pin = 14) #push button
+button = Button(pin = 19) #push button
 crash_sensor = Button(pin = 12)
 Set_LED = LED(pin = 17)
 
