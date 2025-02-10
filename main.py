@@ -4,14 +4,14 @@ from sensors import QRCodeReader, DistanceSensor, LineSensor, LED, Button
 from machine import Pin, PWM, I2C,Timer
 
 #---------------------- Set up motors
-wheels = Wheel((4,5),(7,6)) # Initialize the wheels (GP4, GP5 for left wheel, GP7, GP6 for right wheel) before the order was wrong
-actuator = Actuator(2, 3) # Initialize linear actuator (GP8 for direction, GP9 for PWM control)
+wheels = Wheel((7,6),(4,5)) # Initialize the wheels (GP4, GP5 for left wheel, GP7, GP6 for right wheel) before the order was wrong
+actuator = Actuator(8, 9) # Initialize linear actuator (GP8 for direction, GP9 for PWM control)
 
 #-----------------------Set up sensors
 distance_sensor=DistanceSensor()
 code_reader=QRCodeReader()
 sensors=[LineSensor(18),LineSensor(19),LineSensor(20),LineSensor(21)]
-button = Button(pin = 19) #push button
+button = Button(pin = 14) #push button
 crash_sensor = Button(pin = 12)
 Set_LED = LED(pin = 17)
 
@@ -226,7 +226,7 @@ def rotate(direction,speed=rotate_speed,angle=90):
             if sensors[1].read() == 1:
                 wheels.stop()
                 sleep(3)
-                
+
 def navigate(route):
     n_steps = len(route)
     cur_step = 0
