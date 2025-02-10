@@ -81,12 +81,14 @@ class Wheel:
 
     def rotate_left(self, speed=60):
         self.left_motor.set_direction(1)
+        self.right_motor.set_direction(0)
         self.left_motor.set_speed(speed)
-        self.right_motor.stop()
+        self.right_motor.set_speed(speed)
 
     def rotate_right(self, speed=60):
         self.right_motor.set_direction(1)
-        self.left_motor.stop()
+        self.left_motor.set_direction(0)
+        self.left_motor.set_speed(speed)
         self.right_motor.set_speed(speed)
 
     def stop(self):

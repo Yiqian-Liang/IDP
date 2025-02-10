@@ -99,61 +99,58 @@ routes = {
             [(1, 1), wheels.stop]
         ],
         [  # C to D1
-            [(1, 1), lambda: rotate(direction="right")],
             [(1, 1), lambda: rotate(direction="left")],
-            [(0, 1), lambda: rotate(direction="right")],
-            [(1, 0), None],
+            [(1, 1), lambda: rotate(direction="right")],
+            [(0, 1), None],
             [(1, 0), lambda: rotate(direction="right")],
+            [(0, 1), None],
+            [(0, 1), None],
             #[(0, 0), wheels.stop]
         ],
         [  # D2 to C
+            [(0, 1), None],
             [(0, 1), lambda: rotate(direction="right")],
             [(1, 0), lambda: rotate(direction="left")],
-            [(1, 0), None],
             [(1, 0), lambda: rotate(direction="left")],
-            [(0, 1), lambda: rotate(direction="right")],
             [(1, 1), wheels.stop]
         ],
         [  # C to D2
             [(1, 1), lambda: rotate(direction="right")],
-            [(0, 1), lambda: rotate(direction="left")],
-            [(1, 0), lambda: rotate(direction="right")],
-            [(1, 0), None],
-            [(1, 0), lambda: rotate(direction="right")],
+            [(1, 1), lambda: rotate(direction="right")],
+            [(1, 1), lambda: rotate(direction="left")],
+            [(0, 1), None],
             #[(0, 0), wheels.stop]
         ]
     ],
     "D": [
         [  # D1 to D
+            [(1, 0), None],
+            [(1, 0), None],
             [(1, 0), lambda: rotate(direction="left")],
-            [(1, 0), None],
-            [(1, 0), lambda: rotate(direction="right")],
-            [(1, 0), None],
-            [(0, 1), lambda: rotate(direction="right")],
+            [(1, 0), lambda: rotate(direction="left")],
             [(1, 1), wheels.stop]
         ],
         [  # D to D1
-            [(1, 1), lambda: rotate(direction="left")],
+            [(1, 1), lambda: rotate(direction="right")],
+            [(0, 1), lambda: rotate(direction="right")],
             [(0, 1), None],
-            [(1, 0), lambda: rotate(direction="left")],
-            [(1, 0), None],
-            [(1, 0), lambda: rotate(direction="right")],
+            [(0, 1), None],
             #[(0, 0), wheels.stop]
         ],
         [  # D2 to D
+            [(0, 1), None],
+            [(0, 1), None],
             [(0, 1), lambda: rotate(direction="right")],
-            [(1, 0), lambda: rotate(direction="left")],
-            [(1, 0), None],
-            [(1, 0), lambda: rotate(direction="right")],
+            [(0, 1), None],
             [(0, 1), lambda: rotate(direction="right")],
             [(1, 1), wheels.stop]
         ],
         [  # D to D2
-            [(1, 1), lambda: rotate(direction="right")],
-            [(0, 1), lambda: rotate(direction="left")],
+            [(1, 1), lambda: rotate(direction="left")],
+            [(1, 0), None],
             [(1, 0), lambda: rotate(direction="left")],
             [(1, 0), None],
-            [(1, 0), lambda: rotate(direction="right")],
+            [(1, 0), None],
             #[(0, 0), wheels.stop]
         ]
     ]
@@ -200,38 +197,36 @@ def safety_check(junction):#simple check if the junction matches what we expect
         return 0
     else:
         return 1
-
-
 def rotate(direction,speed=rotate_speed,angle=90):
     # status=sensor_status()
     # # Detect a junction (both left and right sensors detect the line)
     # if status[0] == 1 or status[-1] == 1:
         #print("Junction detected, turning...")
         detach_junction_interrupts()
-        detach_polling() #may not need this
+        #detach_polling() #may not need this
         rpm=speed*rpm_full_load/100
         w_wheel=rpm*2*3.14/60
         v_wheel=d_wheel*w_wheel/2
-        #w_ic=2*v_wheel/D
-        w_ic=v_wheel/D
-        time=angle*3.14*0.9/(180*w_ic) #leave some room for adjustment       
+        w_ic=2*v_wheel/D
+        #w_ic=v_wheel/D
+        time=angle*3.14*1/(180*w_ic) #leave some room for adjustment
+        print(time)
         wheels.stop()  # Stop before turning
-        sleep(1)  # Short delay for stability
-        wheels.rotate_left(speed)
-        sleep(time) #rotate long enough first to make sure the car deviate enough
+        sleep(3)  # Short delay for stability
         if direction == "left":
             wheels.rotate_left(speed)
+            sleep(time)
             if sensors[2].read() == 2:
                 wheels.stop()
-                sleep(1)
+                sleep(3)
                 #attach_junction_interrupts() 
         elif direction == "right":
             wheels.rotate_right(speed)
+            sleep(time)
             if sensors[1].read() == 1:
                 wheels.stop()
-                sleep(1)
-                #attach_junction_interrupts()
-
+                sleep(3)
+                
 def navigate(route):
     n_steps = len(route)
     cur_step = 0
@@ -350,7 +345,14 @@ def main():
         pass
 
     LED.start_flash() #starts flashing as soon as starts first route
-
+    while True:
+        line_following()
+    
+    navigate(routes["A"][0])
+    navigate(routes["A"][1])
+    print("code_reader.read()=",code_reader.read())
+    pick_up_block(depo=1)
+    drop_off(distance_cm=10)
     navigate(routes["start_to_D1"])
     n=4
     for i in range(n):
