@@ -31,126 +31,126 @@ forward_distance=5/100 #5cm
 routes = {
     "D2_to_start": [],
     "start_to_D1": [
-        [(1, 1), None],  # Move straight from start position
-        [(1, 1), lambda: rotate(direction="right")],  # Turn left at the first junction
-        [(1, 1), lambda: rotate(direction="right")],  # Turn right at the second junction
+        [3, None],  # Move straight from start position
+        [3, lambda: rotate(direction="right")],  # Turn left at the first junction
+        [3, lambda: rotate(direction="right")],  # Turn right at the second junction
         #[(0, 0), wheels.stop]  # Stop at D1
     ],
     "A": [
         [  # D1 to A
-            [(1, 0), lambda: rotate(direction="left")],
-            [(1, 0), None],
-            [(0, 1), lambda: rotate(direction="right")],
-            #[(1, 1), wheels.stop]
+            [1, lambda: rotate(direction="left")],
+            [1, None],
+            [2, lambda: rotate(direction="right")],
+            #[3, wheels.stop]
         ],
         [  # A to D1
-            [(1, 1), lambda: rotate(direction="left")],
-            [(0, 1), None],
-            [(0, 1), lambda: rotate(direction="right")],
+            [3, lambda: rotate(direction="left")],
+            [2, None],
+            [2, lambda: rotate(direction="right")],
             #[(0, 0), wheels.stop]
         ],
         [  # D2 to A
-            [(0, 1), lambda: rotate(direction="right")],
-            [(1, 0), lambda: rotate(direction="left")],
-            [(1, 1), wheels.stop]
+            [2, lambda: rotate(direction="right")],
+            [1, lambda: rotate(direction="left")],
+            [3, wheels.stop]
         ],
         [  # A to D2
-            [(1, 1), lambda: rotate(direction="right")],
-            [(1, 0), lambda: rotate(direction="left")],
+            [3, lambda: rotate(direction="right")],
+            [1, lambda: rotate(direction="left")],
             #[(0, 0), wheels.stop]
         ]
     ],
     "B": [
         [  # D1 to B
-            [(1, 0), None],
-            [(1, 0), lambda: rotate(direction="left")],
-            [(1, 0), lambda: rotate(direction="left")],
-            [(1, 1), wheels.stop]
+            [1, None],
+            [1, lambda: rotate(direction="left")],
+            [1, lambda: rotate(direction="left")],
+            [3, wheels.stop]
         ],
         [  # B to D1
-            [(1, 1), lambda: rotate(direction="right")],
-            [(1, 1), lambda: rotate(direction="right")],
-            [(0, 1), None],
+            [3, lambda: rotate(direction="right")],
+            [3, lambda: rotate(direction="right")],
+            [2, None],
             #[(0, 0), wheels.stop]
         ],
         [  # D2 to B
-            [(0, 1), None],
-            [(0, 1), lambda: rotate(direction="right")],
-            [(1, 0), None],
-            [(0, 1), lambda: rotate(direction="right")],
-            [(1, 1), wheels.stop]
+            [2, None],
+            [2, lambda: rotate(direction="right")],
+            [1, None],
+            [2, lambda: rotate(direction="right")],
+            [3, wheels.stop]
         ],
         [  # B to D2
-            [(1, 1), lambda: rotate(direction="left")],
-            [(0, 1), None],
-            [(0, 1), lambda: rotate(direction="left")],
-            [(0, 1), None],
+            [3, lambda: rotate(direction="left")],
+            [2, None],
+            [2, lambda: rotate(direction="left")],
+            [2, None],
             #[(0, 0), wheels.stop]
         ]
     ],
     "C": [
         [  # D1 to C
-            [(1, 0), None],
-            [(1, 0), None],
-            [(1, 0), lambda: rotate(direction="left")],
-            [(1, 0), None],
-            [(1, 0), lambda: rotate(direction="left")],
-            [(0, 1), lambda: rotate(direction="right")],
-            [(1, 1), wheels.stop]
+            [1, None],
+            [1, None],
+            [1, lambda: rotate(direction="left")],
+            [1, None],
+            [1, lambda: rotate(direction="left")],
+            [2, lambda: rotate(direction="right")],
+            [3, wheels.stop]
         ],
         [  # C to D1
-            [(1, 1), lambda: rotate(direction="left")],
-            [(1, 1), lambda: rotate(direction="right")],
-            [(0, 1), None],
-            [(1, 0), lambda: rotate(direction="right")],
-            [(0, 1), None],
-            [(0, 1), None],
+            [3, lambda: rotate(direction="left")],
+            [3, lambda: rotate(direction="right")],
+            [2, None],
+            [1, lambda: rotate(direction="right")],
+            [2, None],
+            [2, None],
             #[(0, 0), wheels.stop]
         ],
         [  # D2 to C
-            [(0, 1), None],
-            [(0, 1), lambda: rotate(direction="right")],
-            [(1, 0), lambda: rotate(direction="left")],
-            [(1, 0), lambda: rotate(direction="left")],
-            [(1, 1), wheels.stop]
+            [2, None],
+            [2, lambda: rotate(direction="right")],
+            [1, lambda: rotate(direction="left")],
+            [1, lambda: rotate(direction="left")],
+            [3, wheels.stop]
         ],
         [  # C to D2
-            [(1, 1), lambda: rotate(direction="right")],
-            [(1, 1), lambda: rotate(direction="right")],
-            [(1, 1), lambda: rotate(direction="left")],
-            [(0, 1), None],
+            [3, lambda: rotate(direction="right")],
+            [3, lambda: rotate(direction="right")],
+            [3, lambda: rotate(direction="left")],
+            [2, None],
             #[(0, 0), wheels.stop]
         ]
     ],
     "D": [
         [  # D1 to D
-            [(1, 0), None],
-            [(1, 0), None],
-            [(1, 0), lambda: rotate(direction="left")],
-            [(1, 0), lambda: rotate(direction="left")],
-            [(1, 1), wheels.stop]
+            [1, None],
+            [1, None],
+            [1, lambda: rotate(direction="left")],
+            [1, lambda: rotate(direction="left")],
+            [3, wheels.stop]
         ],
         [  # D to D1
-            [(1, 1), lambda: rotate(direction="right")],
-            [(0, 1), lambda: rotate(direction="right")],
-            [(0, 1), None],
-            [(0, 1), None],
+            [3, lambda: rotate(direction="right")],
+            [2, lambda: rotate(direction="right")],
+            [2, None],
+            [2, None],
             #[(0, 0), wheels.stop]
         ],
         [  # D2 to D
-            [(0, 1), None],
-            [(0, 1), None],
-            [(0, 1), lambda: rotate(direction="right")],
-            [(0, 1), None],
-            [(0, 1), lambda: rotate(direction="right")],
-            [(1, 1), wheels.stop]
+            [2, None],
+            [2, None],
+            [2, lambda: rotate(direction="right")],
+            [2, None],
+            [2, lambda: rotate(direction="right")],
+            [3, wheels.stop]
         ],
         [  # D to D2
-            [(1, 1), lambda: rotate(direction="left")],
-            [(1, 0), None],
-            [(1, 0), lambda: rotate(direction="left")],
-            [(1, 0), None],
-            [(1, 0), None],
+            [3, lambda: rotate(direction="left")],
+            [1, None],
+            [1, lambda: rotate(direction="left")],
+            [1, None],
+            [1, None],
             #[(0, 0), wheels.stop]
         ]
     ]
@@ -166,9 +166,12 @@ routes = {
 
 def junction_detected(pin):
     global junction_flag
-    if pin == sensors[0].pin:
-        sensors[0].pin.irq(trigger = Pin.IRQ_RISING, handler = None)
-        junction_flag = 1  
+    if sensors[0].read() == 1 and sensors[-1].read() == 0:
+        junction_flag = 1
+    elif sensors[0].read() == 0 and sensors[-1].read() == 1:
+        junction_flag = 2
+    elif sensors[0].read() == 1 and sensors[-1].read() == 1:
+        junction_flag = 3 
 
 # Timer callback for polling sensor status during line following.
 # This callback checks the two middle sensors (sensors[1] and sensors[2])
@@ -190,11 +193,7 @@ def detach_junction_interrupts():
     sensors[0].pin.irq(trigger = Pin.IRQ_RISING, handler = None)
     sensors[-1].pin.irq(trigger = Pin.IRQ_RISING, handler = None)
 
-def safety_check(junction):#simple check if the junction matches what we expect
-    if (sensors[0] == junction [0]) and (sensors[-1] == junction[-1]): #use 1 to represent error
-        return 0
-    else:
-        return 1
+
 
 
 def rotate(direction,speed=rotate_speed,angle=90):
@@ -254,7 +253,7 @@ def navigate(route):
     #     route[cur_step][2]()
 
     while cur_step < n_steps:
-        if junction_flag == 1:
+        if junction_flag == route[cur_step][0]():
             print(junction_flag)
             wheels.stop()
             sleep(1)
