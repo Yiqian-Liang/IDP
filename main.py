@@ -330,17 +330,24 @@ def button_reset():
 
 
 def pick_up_block(depo,distance_cm=5):
-    detach_junction_interrupts()   
-    while distance_sensor.read() >= distance_cm:
-        line_following()
+    detach_junction_interrupts()
     wheels.stop()
+    actuator.retract()
+    sleep(2)
+    actuator.extend(speed = 20)
+    sleep(3)
+
     while True:
         if (data := code_reader.read()) is not None:                
             break
-    actuator.extend()
-    sleep(1)
+
+    while distance_sensor.read() >= distance_cm:
+        line_following()
+    
+    wheels.stop()
     actuator.retract()
     sleep(1)
+
     if depo==1:
         rotate(direction="right",angle=180)
         attach_junction_interrupts()
@@ -355,14 +362,11 @@ def pick_up_block(depo,distance_cm=5):
 
 def drop_off(distance_cm):
         detach_junction_interrupts()
-    #if distance_sensor.read() < distance_cm: #we may not need this
-        detach_polling()
         wheels.stop()
         sleep(1)
         actuator.extend()
         sleep(1)
-        actuator.retract()
-        sleep(1)
+
         wheels.reverse()
         sleep(1) #need to adjust sleep time
         full_rotation() #left right both okay
