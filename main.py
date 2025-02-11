@@ -411,3 +411,9 @@ def main():
            LED.stop_flash() #stops flashing as soon as finished last route
 if __name__ == "__main__":
     main()
+
+actuator.extend()
+    
+    sleep(2.3)
+    actuator.stop()
+    #Wait until button is pushed to start
