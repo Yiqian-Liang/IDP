@@ -68,8 +68,7 @@ class Wheel:
             self.right_motor.set_direction(direction)
             self.left_motor.set_speed(speed+10)
             self.right_motor.set_speed(speed-10)  # Reduce right wheel speed
-
-    def full_rotation(self,direction=0, speed = 60 ) : #anticlockwise is 1 and clockwise is 0
+    def full_rotation(self,direction, speed = 60 ) : #anticlockwise is 1 and clockwise is 0
         self.left_motor.set_speed(speed)
         self.right_motor.set_speed(speed) 
         if direction == 0 :
@@ -100,30 +99,25 @@ class Wheel:
 
 # ---------------- Actuator Class (For linear movement) ---------------- #
 class Actuator(Motor):
-    def __init__(self, dir_pin, pwm_pin, min_position=0, max_position=100):
+    def __init__(self, dir_pin, pwm_pin):
         """Actuator class for controlling a linear actuator."""
         super().__init__(dir_pin, pwm_pin)
-        self.position = min_position  # Track current position
-        self.min_position = min_position
-        self.max_position = max_position
+    
 
     def extend(self, speed=80):
         """Extend the actuator."""
-        if self.position < self.max_position:
-            self.set_direction(0)  # Move forward (extend)
-            self.set_speed(speed)
-            self.position += 1  # Simulate position change
+        self.set_direction(1)  # Move forward (extend)
+        self.set_speed(speed)
 
     def retract(self, speed=80):
         """Retract the actuator."""
-        if self.position > self.min_position:
-            self.set_direction(1)  # Move backward (retract)
-            self.set_speed(speed)
-            self.position -= 1  # Simulate position change
+        self.set_direction(0)  # Move backward (retract)
+        self.set_speed(speed)
 
     def stop(self):
         """Stop the actuator."""
         super().stop()
+
 
 
 
