@@ -189,14 +189,13 @@ def detach_junction_interrupts():
     sensors[-1].pin.irq(trigger = Pin.IRQ_RISING, handler = None)
 
 def safety_check(junction):#simple check if the junction matches what we expect
-    if (sensors[0] == junction [0]) and (sensors[-1] == junction[-1]): #use 1 to represent error
-        return 0
-    else:
+    if (sensors[0] == junction [0]) and (sensors[-1] == junction[-1]): #use 0 to represent error
         return 1
+    else:
+        return 0
 
 
 def rotate(direction,speed=rotate_speed,angle=90):
-    # status=sensor_status()
     # # Detect a junction (both left and right sensors detect the line)
     # if status[0] == 1 or status[-1] == 1:
         #print("Junction detected, turning...")
@@ -230,7 +229,8 @@ def rotate(direction,speed=rotate_speed,angle=90):
             while sensors[1].read() != 1:
                 wheels.rotate_right(speed)
             wheels.stop()
-            sleep(3)    
+            sleep(3)
+
 def full_rotation(speed=rotate_speed,angle=180):
     # status=sensor_status()
     # # Detect a junction (both left and right sensors detect the line)
@@ -275,7 +275,7 @@ def navigate(route):
     #     route[cur_step][2]()
 
     while cur_step < n_steps:
-        if junction_flag == 1:
+        if junction_flag == 1 and safety_check(route[cur_step][0]): 
             print(junction_flag)
             wheels.stop()
             sleep(1)
