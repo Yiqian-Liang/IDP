@@ -230,8 +230,8 @@ def rotate(direction,speed=rotate_speed,angle=90):
                 wheels.rotate_right(speed)
             wheels.stop()
             sleep(3)
-
-def full_rotation(speed=rotate_speed,angle=180):
+                
+def full_rotation(direction,speed=rotate_speed,angle=180):
     # status=sensor_status()
     # # Detect a junction (both left and right sensors detect the line)
     # if status[0] == 1 or status[-1] == 1:
@@ -248,7 +248,7 @@ def full_rotation(speed=rotate_speed,angle=180):
         print(time)
         wheels.stop()  # Stop before turning
         sleep(3)  # Short delay for stability
-        wheels.full_rotation(speed)
+        wheels.full_rotation(direction=direction,speed=speed) #0 for anticlockwise, 1 for clockwise
         sleep(time)
         while sensors[1].read() != 1 and sensors[2].read() != 1:
             wheels.full_rotation(speed)
@@ -330,29 +330,22 @@ def button_reset():
 
 
 def pick_up_block(depo,distance_cm=5):
-    detach_junction_interrupts()
+    detach_junction_interrupts()   
+    while distance_sensor.read() >= distance_cm:
+        line_following()
     wheels.stop()
-    actuator.retract()
-    sleep(2)
-    actuator.extend(speed = 20)
-    sleep(3)
-
     while True:
         if (data := code_reader.read()) is not None:                
             break
-
-    while distance_sensor.read() >= distance_cm:
-        line_following()
-    
-    wheels.stop()
+    actuator.extend()
+    sleep(1)
     actuator.retract()
     sleep(1)
-
     if depo==1:
-        rotate(direction="right",angle=180)
+        full_rotation(direction=1)
         attach_junction_interrupts()
     elif depo==2:
-        full_rotation()
+        full_rotation(direction=0)
         attach_junction_interrupts()
         # if depo==1:
         #     rotate(direction="right",angle=180)
@@ -362,11 +355,14 @@ def pick_up_block(depo,distance_cm=5):
 
 def drop_off(distance_cm):
         detach_junction_interrupts()
+    #if distance_sensor.read() < distance_cm: #we may not need this
+        detach_polling()
         wheels.stop()
         sleep(1)
         actuator.extend()
         sleep(1)
-
+        actuator.retract()
+        sleep(1)
         wheels.reverse()
         sleep(1) #need to adjust sleep time
         full_rotation() #left right both okay
@@ -375,6 +371,7 @@ def drop_off(distance_cm):
 
 
 def main():
+    #this is for testing
     #Wait until button is pushed to start
     while button.value() == 0:
         pass
@@ -389,6 +386,8 @@ def main():
     print("code_reader.read()=",code_reader.read())
     pick_up_block(depo=1)
     drop_off(distance_cm=10)
+
+#this is the actual main structure for the competition
     navigate(routes["start_to_D1"])
     n=4
     for i in range(n):

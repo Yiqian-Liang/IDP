@@ -72,10 +72,10 @@ class Wheel:
     def full_rotation(self,direction=0, speed = 60 ) : #anticlockwise is 1 and clockwise is 0
         self.left_motor.set_speed(speed)
         self.right_motor.set_speed(speed) 
-        if direction == 0 :
+        if direction == 0 :#rotate anticlockwise
            self.left_motor.set_direction(1)
            self.right_motor.set_direction(0)
-        else :
+        else :#rotate clockwise
            self.left_motor.set_direction(0)
            self.right_motor.set_direction(1)
 
