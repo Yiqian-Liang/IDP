@@ -197,7 +197,6 @@ def detach_junction_interrupts():
 
 
 def rotate(direction,speed=rotate_speed,angle=90):
-    # status=sensor_status()
     # # Detect a junction (both left and right sensors detect the line)
     # if status[0] == 1 or status[-1] == 1:
         #print("Junction detected, turning...")
@@ -231,7 +230,31 @@ def rotate(direction,speed=rotate_speed,angle=90):
             while sensors[1].read() != 1:
                 wheels.rotate_right(speed)
             wheels.stop()
-            sleep(3)    
+            sleep(3)
+
+def full_rotation(speed=rotate_speed,angle=180):
+    # status=sensor_status()
+    # # Detect a junction (both left and right sensors detect the line)
+    # if status[0] == 1 or status[-1] == 1:
+        #print("Junction detected, turning...")
+        detach_junction_interrupts()
+        #detach_polling() #may not need this
+        rpm=speed*rpm_full_load/100
+        w_wheel=rpm*2*3.14/60
+        v_wheel=d_wheel*w_wheel/2
+        w_ic=2*v_wheel/D
+        #w_ic=v_wheel/D
+        time=angle*3.14*0.8/(180*w_ic) #leave some room for adjustment
+        #forward_time=forward_distance/v_wheel
+        print(time)
+        wheels.stop()  # Stop before turning
+        sleep(3)  # Short delay for stability
+        wheels.full_rotation(speed)
+        sleep(time)
+        while sensors[1].read() != 1 and sensors[2].read() != 1:
+            wheels.full_rotation(speed)
+        wheels.stop()
+        sleep(3)
 
 def navigate(route):
     n_steps = len(route)
