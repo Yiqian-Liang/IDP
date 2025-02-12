@@ -33,12 +33,31 @@ d_wheel = 6.5/100
 D = 19/100
 
 routes = {
-    "D2_to_start": [],
-    "start_to_D1": [
-        [(1, 1), None],  # Move straight from start position
-        [(1, 1), lambda: rotate(direction="right")],  # Turn left at the first junction
-        [(1, 1), lambda: rotate(direction="right")],  # Turn right at the second junction
-        #[(0, 0), wheels.stop]  # Stop at D1
+    "D2": [
+        [  # Start to D2
+            [(1, 1), None],  # Move straight from start position
+            [(1, 1), lambda: rotate(direction="left")],  # Turn left at the first junction
+            [(0, 1), None],  # Move straight from start position
+            [(1, 1), lambda: rotate(direction="left")],  # Turn right at the second junction
+        ],
+        [  # D2 to start
+            [(0, 1), lambda: rotate(direction="right")],
+            [(1, 0), None],
+            [(0, 1), lambda: rotate(direction="right")],
+            [(1, 1), wheels.stop]
+        ],
+    ],
+    "D1": [
+        [  # Start to D1
+            [(1, 1), None],  # Move straight from start position
+            [(1, 1), lambda: rotate(direction="right")],  # Turn left at the first junction
+            [(1, 1), lambda: rotate(direction="right")],  # Turn right at the second junction
+        ],
+        [  # D1 to start
+            [(1, 0), lambda: rotate(direction="left")],
+            [(1, 0), lambda: rotate(direction="left")],
+            [(1, 1), wheels.stop]
+        ],
     ],
     "A": [
         [  # D1 to A
@@ -286,8 +305,8 @@ def navigate(route):
     while cur_step < n_steps:
         if junction_flag == 1 : 
             print(junction_flag)
-            #wheels.stop()
-            #sleep(1)
+            wheels.stop()
+            sleep(1)
             # while safety_check(route[cur_step][0]): #safety check fails
             #     junction_flag = 0
             #     line_following()
@@ -343,7 +362,7 @@ def pick_up_block(depo = 1,distance_cm=5.7):
     actuator.retract()
     sleep(3)
     actuator.extend()
-    sleep(2.25)
+    sleep(2.3)
     actuator.stop()
     while True:
         if (data := code_reader.read_qr_code()) is not None:
@@ -402,18 +421,15 @@ def main():
     while button.read() == 0:
         pass
     
-    
     actuator.retract()
     sleep(3)
     actuator.stop()
-    
-    attach_button_interrupts()
 
     led.start_flash() #starts flashing as soon as starts first route
 
 
 #this is the actual main structure for the competition
-    navigate(routes["start_to_D1"])
+    navigate(routes["D1"][0])
     n=4
     for i in range(n):
         data=pick_up_block(depo=1)

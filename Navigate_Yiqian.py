@@ -23,7 +23,8 @@ wheels = Wheel((7,6),(4,5)) #wheels changed # Initialize the wheels (GP4, GP5 fo
 actuator = Actuator(8, 9) # Initialize linear actuator (GP8 for direction, GP9 for PWM control)
 sensors=[LineSensor(12),LineSensor(13),LineSensor(14),LineSensor(15)]
 '''
-
+d_wheel=6.5/100 #in meters
+D=0.19 #in meters ditance between the wheels
 direction=0
 forward_speed=80
 rotate_speed=60
@@ -251,10 +252,12 @@ def full_rotation(speed=rotate_speed,angle=180):
         sleep(3)  # Short delay for stability
         wheels.full_rotation(speed)
         sleep(time)
-        while sensors[1].read() != 1 and sensors[2].read() != 1:
-            wheels.full_rotation(speed)
-        wheels.stop()
-        sleep(3)
+        if direction == 0:
+            while sensors[2].read() != 1:
+                wheels.full_rotation(speed)
+        elif direction == 1:
+            while sensors[1].read() != 1:
+                wheels.full_rotation(speed)
 
 def navigate(route):
     n_steps = len(route)
