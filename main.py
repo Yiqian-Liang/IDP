@@ -173,13 +173,13 @@ def junction_detected(pin):
 # and sets the global 'direction' accordingly.
 
 # Simplified line following function that uses the global 'direction'
-def line_following():
+def line_following(speed = 90):
     if sensors[2].read() == 1:
-        wheels.turn_right()
+        wheels.turn_right(speed)
     elif sensors[1].read() == 1:
-        wheels.turn_left()
+        wheels.turn_left(speed)
     else:
-        wheels.forward()
+        wheels.forward(speed)
 
 def attach_junction_interrupts(timer = None):
     sensors[0].pin.irq(trigger=Pin.IRQ_RISING, handler=junction_detected)
@@ -330,17 +330,25 @@ def button_reset():
 
 
 def pick_up_block(depo,distance_cm=5):
-    detach_junction_interrupts()   
-    while distance_sensor.read() >= distance_cm:
-        line_following()
+    detach_junction_interrupts()
+    actuator.retract()
+    sleep(3)
+    actuator.extend()
+    sleep(2.3)
+    actuator.stop()
+
     wheels.stop()
     while True:
         if (data := code_reader.read()) is not None:                
             break
-    actuator.extend()
-    sleep(1)
+         
+    while distance_sensor.read() >= distance_cm:
+        line_following(speed = 30)
+
     actuator.retract()
-    sleep(1)
+    sleep(3)
+    actuator.stop()
+
     if depo==1:
         full_rotation(direction=1)
         attach_junction_interrupts()
@@ -356,13 +364,11 @@ def pick_up_block(depo,distance_cm=5):
 def drop_off(distance_cm):
         detach_junction_interrupts()
     #if distance_sensor.read() < distance_cm: #we may not need this
-        detach_polling()
         wheels.stop()
         sleep(1)
         actuator.extend()
-        sleep(1)
-        actuator.retract()
-        sleep(1)
+        sleep(2.3)
+        actuator.stop()
         wheels.reverse()
         sleep(1) #need to adjust sleep time
         full_rotation() #left right both okay
@@ -411,9 +417,3 @@ def main():
            LED.stop_flash() #stops flashing as soon as finished last route
 if __name__ == "__main__":
     main()
-
-actuator.extend()
-    
-    sleep(2.3)
-    actuator.stop()
-    #Wait until button is pushed to start
