@@ -28,10 +28,12 @@ direction=0
 forward_speed=90
 rotate_speed=80
 forward_distance=3/100 #5cm
+reverse_speed=50
 rpm_full_load = 40
-d_wheel = 6.5/100
-D = 19/100
-
+d_wheel = 6.5/100 #6.5cm
+D = 19/100 #19cm
+actuator_max_speed = 7/1000 #7mm/s
+actuator_speed=80
 routes = {
     "D2": [
         [  # Start to D2
@@ -331,7 +333,7 @@ def navigate(route):
 #             else:
             line_following()
     wheels.stop()
-    sleep(1)
+    #sleep(1)
 
 # Timer callback for polling sensor status during line following.
 # This callback checks the two middle sensors (sensors[1] and sensors[2])
@@ -357,7 +359,7 @@ def button_reset():
 
 
 
-def pick_up_block(depo = 1,distance_cm=5.7):
+def pick_up_block(depo = 1,distance_cm=6.5): #can set qr_distance to 15cm
     detach_junction_interrupts()
     actuator.retract()
     sleep(3)
@@ -404,7 +406,7 @@ def drop_off():
         actuator.extend()
         sleep(2.3)
         actuator.stop()
-        wheels.reverse()
+        wheels.reverse(speed=reverse_speed)
         sleep(0.6) #need to adjust sleep time
         wheels.stop()
         actuator.retract()
