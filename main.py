@@ -27,7 +27,7 @@ sensors=[LineSensor(12),LineSensor(13),LineSensor(14),LineSensor(15)]
 direction=0
 forward_speed=90
 rotate_speed=80
-forward_distance=5/100 #5cm
+forward_distance=3/100 #5cm
 rpm_full_load = 40
 d_wheel = 6.5/100
 D = 19/100
@@ -45,7 +45,7 @@ routes = {
             [(1, 0), lambda: rotate(direction="left")],
             [(1, 0), None],
             [(0, 1), lambda: rotate(direction="right")],
-            #[(1, 1), wheels.stop]
+            [(1, 1), wheels.stop]
         ],
         [  # A to D1
             [(1, 1), lambda: rotate(direction="left")],
@@ -235,7 +235,7 @@ def rotate(direction,speed=rotate_speed,angle=90):
             wheels.stop()
             #sleep(3)
                 
-def full_rotation(direction,speed=rotate_speed,angle=180):
+def full_rotation(direction,speed=rotate_speed*0.7,angle=180):
     # status=sensor_status()
     # # Detect a junction (both left and right sensors detect the line)
     # if status[0] == 1 or status[-1] == 1:
@@ -256,10 +256,10 @@ def full_rotation(direction,speed=rotate_speed,angle=180):
         sleep(time)
         if direction == 1:
             while sensors[1].read() != 1:
-                wheels.full_rotation(speed)
+                wheels.full_rotation(direction = direction, speed=speed)
         if direction == 0:
             while sensors[2].read() != 1:
-                wheels.full_rotation(speed)
+                wheels.full_rotation(direction = direction, speed = speed)
         
         wheels.stop()
         sleep(0.1)
@@ -345,12 +345,14 @@ def pick_up_block(depo = 1,distance_cm=5.7):
     actuator.extend()
     sleep(2.3)
     actuator.stop()
-
-    wheels.stop()
     while True:
         if (data := code_reader.read_qr_code()) is not None:
             print(data)
             break
+        else:
+            line_following(speed = 50)
+    wheels.stop()
+    
          
     while distance_sensor.read() >= distance_cm:
         print(distance_sensor.read())
@@ -377,19 +379,25 @@ def pick_up_block(depo = 1,distance_cm=5.7):
 def drop_off():
         detach_junction_interrupts()
     #if distance_sensor.read() < distance_cm: #we may not need this
+        wheels.forward()
+        sleep(0.5)
         wheels.stop()
-        sleep(1)
         actuator.extend()
         sleep(2.3)
         actuator.stop()
         wheels.reverse()
-        sleep(1) #need to adjust sleep time
+        sleep(0.6) #need to adjust sleep time
+        wheels.stop()
+        actuator.retract()
+        sleep(3)
+        actuator.stop()
         full_rotation(direction = 0) #left right both okay
         attach_junction_interrupts()
         # rotate(direction="left",angle=180)
 
 
 def main():
+
     led.stop_flash()
     while button.read() == 0:
         pass
