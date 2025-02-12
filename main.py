@@ -286,8 +286,8 @@ def navigate(route):
     while cur_step < n_steps:
         if junction_flag == 1 : 
             print(junction_flag)
-            wheels.stop()
-            sleep(1)
+            #wheels.stop()
+            #sleep(1)
             # while safety_check(route[cur_step][0]): #safety check fails
             #     junction_flag = 0
             #     line_following()
@@ -343,7 +343,7 @@ def pick_up_block(depo = 1,distance_cm=5.7):
     actuator.retract()
     sleep(3)
     actuator.extend()
-    sleep(2.3)
+    sleep(2.25)
     actuator.stop()
     while True:
         if (data := code_reader.read_qr_code()) is not None:
@@ -402,9 +402,12 @@ def main():
     while button.read() == 0:
         pass
     
+    
     actuator.retract()
     sleep(3)
     actuator.stop()
+    
+    attach_button_interrupts()
 
     led.start_flash() #starts flashing as soon as starts first route
 
