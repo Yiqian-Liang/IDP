@@ -28,12 +28,10 @@ direction=0
 forward_speed=90
 rotate_speed=80
 forward_distance=3/100 #5cm
-reverse_speed=50
 rpm_full_load = 40
-d_wheel = 6.5/100 #6.5cm
-D = 19/100 #19cm
-actuator_max_speed = 7/1000 #7mm/s
-actuator_speed=80
+d_wheel = 6.5/100
+D = 19/100
+
 routes = {
     "D2": [
         [  # Start to D2
@@ -333,7 +331,7 @@ def navigate(route):
 #             else:
             line_following()
     wheels.stop()
-    #sleep(1)
+    sleep(1)
 
 # Timer callback for polling sensor status during line following.
 # This callback checks the two middle sensors (sensors[1] and sensors[2])
@@ -359,7 +357,7 @@ def button_reset():
 
 
 
-def pick_up_block(depo = 1,distance_cm=6.5): #can set qr_distance to 15cm
+def pick_up_block(depo = 1,distance_cm=5.7):
     detach_junction_interrupts()
     actuator.retract()
     sleep(3)
@@ -397,22 +395,25 @@ def pick_up_block(depo = 1,distance_cm=6.5): #can set qr_distance to 15cm
         #     rotate(direction="left",angle=180)
     return data
 
-def drop_off():
+def drop_off(data):
         detach_junction_interrupts()
     #if distance_sensor.read() < distance_cm: #we may not need this
         wheels.forward()
-        sleep(0.5)
+        sleep(0.7)
         wheels.stop()
         actuator.extend()
-        sleep(2.3)
+        sleep(2.2)
         actuator.stop()
-        wheels.reverse(speed=reverse_speed)
-        sleep(0.6) #need to adjust sleep time
+        wheels.reverse()
+        sleep(0.55) #need to adjust sleep time
         wheels.stop()
         actuator.retract()
         sleep(3)
         actuator.stop()
-        full_rotation(direction = 0) #left right both okay
+        if data == 'D':
+            full_rotation(direction = 1)
+        else:
+            full_rotation(direction = 0)
         attach_junction_interrupts()
         # rotate(direction="left",angle=180)
 
@@ -436,7 +437,7 @@ def main():
     for i in range(n):
         data=pick_up_block(depo=1)
         navigate(routes[data][0])
-        drop_off()
+        drop_off(data)
         sleep(2) 
         if i<n-1:
             navigate(routes[data][1])
@@ -445,7 +446,7 @@ def main():
     for i in range(n):
         data=pick_up_block(depo=1)
         navigate(routes[data][2])
-        drop_off()
+        drop_off(data)
         sleep(2) 
         if i<n-1:
             navigate(routes[data][2])
@@ -455,4 +456,3 @@ def main():
     
 if __name__ == "__main__":
     main()
-
