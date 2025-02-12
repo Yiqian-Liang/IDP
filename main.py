@@ -25,8 +25,8 @@ sensors=[LineSensor(12),LineSensor(13),LineSensor(14),LineSensor(15)]
 '''
 
 direction=0
-forward_speed=80
-rotate_speed=60
+forward_speed=90
+rotate_speed=80
 forward_distance=5/100 #5cm
 rpm_full_load = 40
 d_wheel = 6.5/100
@@ -303,7 +303,7 @@ def navigate(route):
                 attach_junction_interrupts()
             else:
                 line_following()
-                tim.init(period=500, mode=Timer.ONE_SHOT, callback=attach_interrupts)
+                tim.init(period=500, mode=Timer.ONE_SHOT, callback=attach_junction_interrupts)
                 cur_step += 1
         else:
             #may just use the line following function here
@@ -374,7 +374,7 @@ def pick_up_block(depo = 1,distance_cm=5.7):
         #     rotate(direction="left",angle=180)
     return data
 
-def drop_off(distance_cm):
+def drop_off():
         detach_junction_interrupts()
     #if distance_sensor.read() < distance_cm: #we may not need this
         wheels.stop()
@@ -384,7 +384,7 @@ def drop_off(distance_cm):
         actuator.stop()
         wheels.reverse()
         sleep(1) #need to adjust sleep time
-        full_rotation() #left right both okay
+        full_rotation(direction = 0) #left right both okay
         attach_junction_interrupts()
         # rotate(direction="left",angle=180)
 
