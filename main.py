@@ -395,22 +395,25 @@ def pick_up_block(depo = 1,distance_cm=5.7):
         #     rotate(direction="left",angle=180)
     return data
 
-def drop_off():
+def drop_off(data):
         detach_junction_interrupts()
     #if distance_sensor.read() < distance_cm: #we may not need this
         wheels.forward()
-        sleep(0.5)
+        sleep(0.7)
         wheels.stop()
         actuator.extend()
-        sleep(2.3)
+        sleep(2.2)
         actuator.stop()
         wheels.reverse()
-        sleep(0.6) #need to adjust sleep time
+        sleep(0.55) #need to adjust sleep time
         wheels.stop()
         actuator.retract()
         sleep(3)
         actuator.stop()
-        full_rotation(direction = 0) #left right both okay
+        if data == 'D':
+            full_rotation(direction = 1)
+        else:
+            full_rotation(direction = 0)
         attach_junction_interrupts()
         # rotate(direction="left",angle=180)
 
@@ -434,7 +437,7 @@ def main():
     for i in range(n):
         data=pick_up_block(depo=1)
         navigate(routes[data][0])
-        drop_off()
+        drop_off(data)
         sleep(2) 
         if i<n-1:
             navigate(routes[data][1])
@@ -443,7 +446,7 @@ def main():
     for i in range(n):
         data=pick_up_block(depo=1)
         navigate(routes[data][2])
-        drop_off()
+        drop_off(data)
         sleep(2) 
         if i<n-1:
             navigate(routes[data][2])
