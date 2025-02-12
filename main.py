@@ -1,7 +1,7 @@
 from motor import Wheel, Actuator  # Import the Wheel and Actuator classes
 from time import sleep 
 from sensors import QRCodeReader, DistanceSensor, LineSensor, LED, Button
-from machine import Pin, PWM, I2C,Timer
+from machine import Pin, PWM, I2C,Timer, reset
 
 #---------------------- Set up motors
 wheels = Wheel((7,6),(4,5)) # Initialize the wheels (GP4, GP5 for left wheel, GP7, GP6 for right wheel) before the order was wrong
@@ -41,7 +41,7 @@ routes = {
             [(1, 1), lambda: rotate(direction="left")],  # Turn right at the second junction
         ],
         [  # D2 to start
-            [(0, 1), lambda: rotate(direction="right")],
+            [(0, 1), lambda: rotate(direction="left")], #imagine has just arrived at D2 instead of has actually picked up anything
             [(1, 0), None],
             [(0, 1), lambda: rotate(direction="right")],
             [(1, 1), wheels.stop]
@@ -305,8 +305,8 @@ def navigate(route):
     while cur_step < n_steps:
         if junction_flag == 1 : 
             print(junction_flag)
-            wheels.stop()
-            sleep(1)
+            #wheels.stop()
+            #sleep(1)
             # while safety_check(route[cur_step][0]): #safety check fails
             #     junction_flag = 0
             #     line_following()
@@ -343,26 +343,18 @@ def attach_button_interrupt():
     button.pin.irq(trigger = Pin.IRQ_RISING, handler = button_reset)
 def detach_button_interrupt():
     button.pin.irq(trigger = Pin.IRQ_RISING, handler = None)
-
-def button_reset():
-    '''Can be pushed at any time to stop the robot, 
-    then waits until robot is moved and replaced at start, then restarts code'''
-    detach_button_interrupt()
-    led.stop_flash() #since won't be driving anymore
-    wheels.stop()
-    sleep(1) #definitely prevents bouncing
-    while button.read() == 0:
-        pass
-    main() #go back to start of program
+    
+def button_reset(pin):
+    reset()
 
 
-
-def pick_up_block(depo = 1,distance_cm=5.7):
+def pick_up_block(r = 0, depo = 1,distance_cm=6.5):
+    #set r if needs to revers before 180
     detach_junction_interrupts()
     actuator.retract()
     sleep(3)
     actuator.extend()
-    sleep(2.3)
+    sleep(2.25)
     actuator.stop()
     while True:
         if (data := code_reader.read_qr_code()) is not None:
@@ -382,6 +374,10 @@ def pick_up_block(depo = 1,distance_cm=5.7):
     actuator.retract()
     sleep(3)
     actuator.stop()
+    
+    if r == 1:
+        wheels.reverse()
+        sleep(1)
 
     if depo==1:
         full_rotation(direction=1)
@@ -399,10 +395,15 @@ def drop_off(data):
         detach_junction_interrupts()
     #if distance_sensor.read() < distance_cm: #we may not need this
         wheels.forward()
-        sleep(0.7)
-        wheels.stop()
+        if data == 'A':
+            sleep(0.4)
+            wheels.stop()
+        else:
+            sleep(0.7)
+            wheels.stop()
+            
         actuator.extend()
-        sleep(2.2)
+        sleep(2.25)
         actuator.stop()
         wheels.reverse()
         sleep(0.55) #need to adjust sleep time
@@ -419,23 +420,31 @@ def drop_off(data):
 
 
 def main():
-
+    #in case emergency stop carried out
+    wheels.stop()
+    actuator.stop()
     led.stop_flash()
+    
     while button.read() == 0:
         pass
+
     
     actuator.retract()
     sleep(3)
     actuator.stop()
 
     led.start_flash() #starts flashing as soon as starts first route
-
+    
+    #attach_button_interrupt()
 
 #this is the actual main structure for the competition
     navigate(routes["D1"][0])
     n=4
     for i in range(n):
-        data=pick_up_block(depo=1)
+        if n == n-1:
+            data=pick_up_block(r= 1, depo=1)
+        else:
+            data=pick_up_block(depo=1)
         navigate(routes[data][0])
         drop_off(data)
         sleep(2) 
@@ -443,6 +452,8 @@ def main():
             navigate(routes[data][1])
         else:
            navigate(routes[data][3]) #destination to D2
+           navigate(routes['D2'][1]) #D2 to start
+           led.stop_flash() #just do 4 blocks
     for i in range(n):
         data=pick_up_block(depo=1)
         navigate(routes[data][2])
