@@ -5,7 +5,7 @@ from machine import Pin, PWM, I2C,Timer, reset
 
 #---------------------- Set up motors
 wheels = Wheel((7,6),(4,5)) # Initialize the wheels (GP4, GP5 for left wheel, GP7, GP6 for right wheel) before the order was wrong
-actuator = Actuator(0, 1) # Initialize linear actuator (GP8 for direction, GP9 for PWM control)
+actuator = Actuator(3, 2) # Initialize linear actuator (GP8 for direction, GP9 for PWM control)
 
 #-----------------------Set up sensors
 distance_sensor=DistanceSensor()
@@ -27,7 +27,7 @@ sensors=[LineSensor(12),LineSensor(13),LineSensor(14),LineSensor(15)]
 direction=0
 forward_speed=90
 rotate_speed=80
-forward_distance=3/100 #5cm
+forward_distance=2/100 #5cm
 rpm_full_load = 40
 d_wheel = 6.5/100
 D = 19/100
@@ -241,7 +241,7 @@ def rotate(direction,speed=rotate_speed,angle=90):
         v_wheel=d_wheel*w_wheel/2
         #w_ic=2*v_wheel/D
         w_ic=v_wheel/D
-        time=angle*3.14*0.8/(180*w_ic) #leave some room for adjustment
+        time=angle*3.14*0.5/(180*w_ic) #leave some room for adjustment
         forward_time=forward_distance/v_wheel
         print(time)
         wheels.stop()  # Stop before turning
@@ -360,13 +360,16 @@ def button_reset(pin):
     reset()
 
 
-def pick_up_block(r = 0, depo = 1,distance_cm=6.5):
+def pick_up_block(r = 0, depo = 1,distance_cm=6.8):
     #set r if needs to revers before 180
-    detach_junction_interrupts()
-    actuator.retract()
-    sleep(3)
+    #detach_junction_interrupts()
+    global junction_flag
+    junction_flag =0
+    attach_junction_interrupts()
+    actuator.retract(speed = 100)
+    sleep(4)
     actuator.extend()
-    sleep(2.15)
+    sleep(2.55)
     actuator.stop()
     while True:
         if (data := code_reader.read_qr_code()) is not None:
@@ -382,10 +385,20 @@ def pick_up_block(r = 0, depo = 1,distance_cm=6.5):
          
     while distance_sensor.read() >= distance_cm:
         print(distance_sensor.read())
-        line_following(speed = 50)
+        if junction_flag!=0:
+            wheels.forward(speed=50)
+            sleep(0.5)
+            junction_flag = 0
+        else:
+            line_following(speed = 50)
     
     wheels.stop()
     
+    if r == 1:
+        wheels.reverse(speed = 60)
+        sleep(0.3)
+        wheels.stop()
+        
     actuator.retract()
     sleep(3)
     actuator.stop()
@@ -414,11 +427,11 @@ def drop_off(data):
             sleep(0.4)
             wheels.stop()
         else:
-            sleep(0.7)
+            sleep(0.4)
             wheels.stop()
             
         actuator.extend()
-        sleep(2.15)
+        sleep(2.55)
         actuator.stop()
         wheels.reverse()
         sleep(0.55) #need to adjust sleep time
@@ -435,8 +448,23 @@ def drop_off(data):
 
 
 def main():
-
-    wheels.stop()
+    while button.read() == 0:
+        pass
+    led.start_flash()
+    
+    n = 4
+    for i in range(n):
+        data=pick_up_block(depo=2)
+        navigate(routes[data][2])
+        drop_off(data)
+        sleep(2) 
+        if i<n-1:
+            navigate(routes[data][2])
+        else:
+            navigate(routes["D2_to_start"])
+            led.stop_flash() #stops flashing as soon as finished last route
+    
+    '''wheels.stop()
     actuator.stop()
     led.stop_flash()
     
@@ -444,8 +472,8 @@ def main():
         pass
 
     
-    actuator.retract()
-    sleep(3)
+    actuator.retract(speed = 100)
+    sleep(2.5)
     actuator.stop()
 
     led.start_flash() #starts flashing as soon as starts first route
@@ -454,12 +482,12 @@ def main():
 
 #this is the actual main structure for the competition
     navigate(routes["D1"][0])
-    n=4
+    n=1
     for i in range(n):
         if n == n-1:
             data=pick_up_block(r= 1, depo=1)
         else:
-            data=pick_up_block(depo=1)
+            data=pick_up_block(r = 1, depo=1)
             
         if data == 'D' or data == 'C':
             navigate(routes['A'][0])
@@ -481,11 +509,13 @@ def main():
             if data == 'D' or data == 'C':
                 navigate(routes['A'][4])
                 led.stop_flash()
+                wheels.stop()
             else:
                 navigate(routes[data][4])
                 led.stop_flash()
+                wheels.stop()'''
 
-    for i in range(n):
+    '''for i in range(n):
         data=pick_up_block(depo=1)
         navigate(routes[data][2])
         drop_off(data)
@@ -498,3 +528,4 @@ def main():
     
 if __name__ == "__main__":
     main()
+
