@@ -5,7 +5,7 @@ from machine import Pin, PWM, I2C,Timer
 
 #---------------------- Set up motors
 wheels = Wheel((7,6),(4,5)) # Initialize the wheels (GP7, GP6 for left wheel, GP4, GP5 for right wheel) before the order was wrong
-actuator = Actuator(8, 9) # Initialize linear actuator (GP8 for direction, GP9 for PWM control)
+actuator = Actuator(3, 2) # Initialize linear actuator (GP8 for direction, GP9 for PWM control)
 
 #-----------------------Set up sensors
 distance_sensor=DistanceSensor()
@@ -31,19 +31,10 @@ rotate_speed=60
 forward_distance=5/100 #5cm
 reverse_speed=40
 actuator_speed=80
-extension=12.7/1000 #12.7mm
+extension=14 #12.7mm
 drop_off_distance=10 #10cm
+actuator_max_speed=7 #7mm/s
 rpm_full_load=40 #rpm=speed*rpm_full_load/100
-def extend(speed=actuator_speed): #extend actuator
-    time=extension/(actuator_max_speed*speed/100)
-    actuator.extend(speed)
-    sleep(time)
-    actuator.stop()
-def retract(speed=actuator_speed): #retract actuator
-    time=extension/(actuator_max_speed*speed/100)+1.5 #EXTRA FOR SAFETY
-    actuator.retract(speed)
-    sleep(time)
-    actuator.stop()
 
 routes = {
     "D2_to_start": [],
@@ -172,6 +163,22 @@ routes = {
         ]
     ]
 }
+def speed_and_time(speed,distance_cm=6):
+    rpm=speed*rpm_full_load/100
+    w_wheel=rpm*2*3.14/60
+    v_wheel=d_wheel*w_wheel/2
+    time=distance_cm/(v_wheel*100)
+    return v_wheel,time
+def extend(speed=actuator_speed): #extend actuator
+    time=extension/(actuator_max_speed*speed/100)
+    actuator.extend(speed)
+    sleep(time)
+    actuator.stop()
+def retract(speed=actuator_speed): #retract actuator
+    time=extension/(actuator_max_speed*speed/100)*1.25 #EXTRA FOR SAFETY
+    actuator.retract(speed)
+    sleep(time)
+    actuator.stop()
 
 # Use dict: 
 # - The first list is from D1 to the destination.
@@ -227,9 +234,7 @@ def rotate(direction,speed=rotate_speed,angle=90):
         #print("Junction detected, turning...")
         detach_junction_interrupts()
         #detach_polling() #may not need this
-        rpm=speed*rpm_full_load/100
-        w_wheel=rpm*2*3.14/60
-        v_wheel=d_wheel*w_wheel/2
+        v_wheel=speed_and_time(speed=speed,distance_cm=6)[0]
         #w_ic=2*v_wheel/D
         w_ic=v_wheel/D
         time=angle*3.14*0.8/(180*w_ic) #leave some room for adjustment
@@ -257,16 +262,13 @@ def rotate(direction,speed=rotate_speed,angle=90):
             wheels.stop()
             #sleep(3)
 
-def full_rotation(speed=rotate_speed,angle=180):
-    # status=sensor_status()
+def full_rotation(direction,speed=rotate_speed,angle=180): #need to rotate faster got load
+    # status=sensor_stastus()
     # # Detect a junction (both left and right sensors detect the line)
     # if status[0] == 1 or status[-1] == 1:
         #print("Junction detected, turning...")
         detach_junction_interrupts()
-        #detach_polling() #may not need this
-        rpm=speed*rpm_full_load/100
-        w_wheel=rpm*2*3.14/60
-        v_wheel=d_wheel*w_wheel/2
+        v_wheel=speed_and_time(speed)[0]
         w_ic=2*v_wheel/D
         #w_ic=v_wheel/D
         time=angle*3.14*0.8/(180*w_ic) #leave some room for adjustment
@@ -358,52 +360,81 @@ def button_reset():
 
 
 
-def pick_up_block(depo,distance_cm=6.5):
-    detach_junction_interrupts()
-    retract()
-    extend()   
-    while distance_sensor.read() >= distance_cm:
-        if (data := code_reader.read_qr_code()) is not None:
-            print(data)
-            #break
+def pick_up_block(a,depo=1,speed=80,d_rev=7,d_safe=6):
+    v_wheel=speed_and_time(speed,d_safe)[0]
+    #print(v_wheel)
+    retract(100)
+    extend(100)
+    wheels.reverse(speed)
+    sleep(rev_time)
+    data1,data2 = None,None
+    attempts = 2  
+    attempt_count = 0
+    tim=Timer()
+    n=0
+
+    while distance_sensor.read() >= d_safe:
+        data1 = code_reader.read_qr_code()  # read QR code
+        if data in ['A','B','C','D']:
+            print("QR Code Detected:", data)
+            data2 = data1  # read QR code
+            line_following(speed=speed)  # continue line following
         else:
-            line_following(speed = 50)
+            attempt_count += 1
+            if attempt_count >= attempts:
+                line_following(speed=speed)
+                continue
+            wheels.reverse(speed)
+            sleep(speed_and_time(speed,d_safe)[1])
+            #wheels.stop()
     wheels.stop()
+    wheels.reverse(speed/2)
+    sleep(speed_and_time(speed/2,d_safe/4)[1])
+    retract()
+    wheels.reverse(speed)
+    if a-0.5>0:
+        sleep(speed_and_time(speed,(a-0.5)*d_rev)[1])
+        wheels.stop()
+        sleep(2) #not using junction flag so don't need to reverse
     if depo==1:
-        rotate(direction="right",angle=180)
+        full_rotation(1)  #rotate(direction="right",angle=180)
+        #if it too deviated we may need to do line following(set up timer) first then reverse
     elif depo==2:
-        rotate(direction="left",angle=180)
+        full_rotation(0)  #rotate(direction="left",angle=180)
+    '''This is for calibration, in case that the robot is too deviated from the line'''
+    start = time.time()
+    while time.time()-start < speed_and_time(speed, a*d_rev)[1]:  #may use fixed values
+        line_following(speed)
+    print(time.time()-start,speed_and_time(speed, a*d_rev)[1])
+    wheels.stop()
+    sleep(2)
+    wheels.reverse(speed)
+    sleep(speed_and_time(speed,(a+1)*d_rev)[1])
+    wheels.stop()
+    sleep(1.5)
         # if depo==1:
         #     rotate(direction="right",angle=180)
         # elif depo==2:
         #     rotate(direction="left",angle=180)
     attach_junction_interrupts()
-    return data
+    return data2
 
-def drop_off(distance=10/100,speed=50): #10 cm
+def drop_off(distance=16,speed=60): #10 cm
     detach_junction_interrupts()
     #if distance_sensor.read() < distance_cm: #we may not need this
-    rpm=speed*rpm_full_load/100
-    w_wheel=rpm*2*3.14/60
-    v_wheel=d_wheel*w_wheel/2
-    time=distance/v_wheel
-    wheels.forward()
+    wheels.forward(speed_and_time(speed=speed)[1])
     sleep(time)
-    wheels.stop()
-    #sleep(1)
+    wheels.stop() 
+    sleep(1)
+    '''above is for extra distance of forward line following(calibration) may be able to remove'''
     extend()
-    n=0
-    while n<2: #may need to change this
-        if junction_flag!=0:
-            wheels.stop()
-            sleep(2)
-            detach_junction_interrupts()
-            n+=1
-            junction_flag=0            
-            tim.init(period=500, mode=Timer.ONE_SHOT, callback=attach_junction_interrupts)
-        wheels.reverse(speed=speed)
-    wheels.stop()
+    wheels.reverse(speed)
+    sleep(speed_and_time(speed, distance)[1])
     retract()
+    full_rotation(1)
+    wheels.reverse(speed)
+    sleep(speed_and_time(speed, 10)[1])#again, getting extra forward line following distance
+    wheels.stop()
     #rotate(direction="right",angle=180) #left right both okay
     #attach_junction_interrupts() 
     # rotate(direction="left",angle=180)
@@ -412,7 +443,7 @@ def drop_off(distance=10/100,speed=50): #10 cm
 
 def main():
     #Wait until button is pushed to start
-    while button.value() == 0:
+    while button.read() == 0:
         pass
 
     LED.start_flash() #starts flashing as soon as starts first route
@@ -428,7 +459,7 @@ def main():
     navigate(routes["start_to_D1"])
     n=4
     for i in range(n):
-        data=pick_up_block(depo=1)
+        data=pick_up_block(a=i,depo=1)
         navigate(routes[data][0])
         drop_off()
         sleep(2) 
@@ -437,7 +468,7 @@ def main():
         else:
            navigate(routes[data][3]) #destination to D2
     for i in range(n):
-        data=pick_up_block(depo=1)
+        data=pick_up_block(a=i,depo=1)
         navigate(routes[data][2])
         drop_off()
         sleep(2) 

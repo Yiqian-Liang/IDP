@@ -31,7 +31,7 @@ forward_distance=3/100
 rpm_full_load = 40
 d_wheel = 6.5/100
 D = 19/100
-
+actuator_max_speed=7/1000
 routes = {
     "D2": [
         [  # Start to D2
