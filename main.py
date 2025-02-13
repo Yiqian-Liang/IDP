@@ -27,7 +27,7 @@ sensors=[LineSensor(12),LineSensor(13),LineSensor(14),LineSensor(15)]
 direction=0
 forward_speed=90
 rotate_speed=80
-forward_distance=3/100 #5cm
+forward_distance=3/100 
 rpm_full_load = 40
 d_wheel = 6.5/100
 D = 19/100
@@ -462,7 +462,7 @@ def main():
         if i<n-1:
             navigate(routes[data][2])
         else:
-           navigate(routes["D2_to_start"])
+           navigate(routes["D2"][1]) #D2 to start
            led.stop_flash() #stops flashing as soon as finished last route
     
 if __name__ == "__main__":

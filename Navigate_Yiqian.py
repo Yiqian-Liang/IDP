@@ -29,6 +29,22 @@ direction=0
 forward_speed=80
 rotate_speed=60
 forward_distance=5/100 #5cm
+reverse_speed=40
+actuator_speed=80
+extension=12.7/1000 #12.7mm
+drop_off_distance=10 #10cm
+rpm_full_load=40 #rpm=speed*rpm_full_load/100
+def extend(speed=actuator_speed): #extend actuator
+    time=extension/(actuator_max_speed*speed/100)
+    actuator.extend(speed)
+    sleep(time)
+    actuator.stop()
+def retract(speed=actuator_speed): #retract actuator
+    time=extension/(actuator_max_speed*speed/100)+1.5 #EXTRA FOR SAFETY
+    actuator.retract(speed)
+    sleep(time)
+    actuator.stop()
+
 routes = {
     "D2_to_start": [],
     "start_to_D1": [
@@ -45,7 +61,7 @@ routes = {
             #[3, wheels.stop]
         ],
         [  # A to D1
-            [3, lambda: rotate(direction="left")],
+            [3, lambda: rotate(direction="right")],
             [2, None],
             [2, lambda: rotate(direction="right")],
             #[(0, 0), wheels.stop]
@@ -56,7 +72,7 @@ routes = {
             [3, wheels.stop]
         ],
         [  # A to D2
-            [3, lambda: rotate(direction="right")],
+            [3, lambda: rotate(direction="left")],
             [1, lambda: rotate(direction="left")],
             #[(0, 0), wheels.stop]
         ]
@@ -69,7 +85,7 @@ routes = {
             [3, wheels.stop]
         ],
         [  # B to D1
-            [3, lambda: rotate(direction="right")],
+            [3, lambda: rotate(direction="left")],
             [3, lambda: rotate(direction="right")],
             [2, None],
             #[(0, 0), wheels.stop]
@@ -82,7 +98,7 @@ routes = {
             [3, wheels.stop]
         ],
         [  # B to D2
-            [3, lambda: rotate(direction="left")],
+            [3, lambda: rotate(direction="right")],
             [2, None],
             [2, lambda: rotate(direction="left")],
             [2, None],
@@ -100,7 +116,7 @@ routes = {
             [3, wheels.stop]
         ],
         [  # C to D1
-            [3, lambda: rotate(direction="left")],
+            [3, lambda: rotate(direction="right")],
             [3, lambda: rotate(direction="right")],
             [2, None],
             [1, lambda: rotate(direction="right")],
@@ -116,7 +132,7 @@ routes = {
             [3, wheels.stop]
         ],
         [  # C to D2
-            [3, lambda: rotate(direction="right")],
+            [3, lambda: rotate(direction="left")],
             [3, lambda: rotate(direction="right")],
             [3, lambda: rotate(direction="left")],
             [2, None],
@@ -132,7 +148,7 @@ routes = {
             [3, wheels.stop]
         ],
         [  # D to D1
-            [3, lambda: rotate(direction="right")],
+            [3, lambda: rotate(direction="left")],
             [2, lambda: rotate(direction="right")],
             [2, None],
             [2, None],
@@ -147,7 +163,7 @@ routes = {
             [3, wheels.stop]
         ],
         [  # D to D2
-            [3, lambda: rotate(direction="left")],
+            [3, lambda: rotate(direction="right")],
             [1, None],
             [1, lambda: rotate(direction="left")],
             [1, None],
@@ -179,13 +195,21 @@ def junction_detected(pin):
 # and sets the global 'direction' accordingly.
 
 # Simplified line following function that uses the global 'direction'
-def line_following():
-    if sensors[2].read() == 1:
-        wheels.turn_right()
-    elif sensors[1].read() == 1:
-        wheels.turn_left()
+def line_following(direction=direction,speed=forward_speed):
+    if direction == 0:
+        if sensors[2].read() == 1:
+            wheels.turn_right(speed)
+        elif sensors[1].read() == 1:
+            wheels.turn_left(speed)
+        else:
+            wheels.forward(speed)
     else:
-        wheels.forward()
+        if sensors[2].read() == 1:
+            wheels.turn_left(speed)
+        elif sensors[1].read() == 1:
+            wheels.turn_right(speed)
+        else:
+            wheels.reverse(speed)
 
 def attach_junction_interrupts(timer = None):
     sensors[0].pin.irq(trigger=Pin.IRQ_RISING, handler=junction_detected)
@@ -208,22 +232,22 @@ def rotate(direction,speed=rotate_speed,angle=90):
         v_wheel=d_wheel*w_wheel/2
         #w_ic=2*v_wheel/D
         w_ic=v_wheel/D
-        time=angle*3.14*0.4/(180*w_ic) #leave some room for adjustment
+        time=angle*3.14*0.8/(180*w_ic) #leave some room for adjustment
         forward_time=forward_distance/v_wheel
         print(time)
         wheels.stop()  # Stop before turning
-        sleep(3)  # Short delay for stability
+        #sleep(3)  # Short delay for stability
         wheels.forward(speed)  # Start moving forward
         sleep(forward_time)
         wheels.stop()
-        sleep(3)
+        #sleep(3)
         if direction == "left":
             wheels.rotate_left(speed)
             sleep(time)
             while sensors[2].read() != 1:
                 wheels.rotate_left(speed)
             wheels.stop()
-            sleep(3)               
+            #sleep(3)               
                 #attach_junction_interrupts() 
         elif direction == "right":
             wheels.rotate_right(speed)
@@ -231,7 +255,7 @@ def rotate(direction,speed=rotate_speed,angle=90):
             while sensors[1].read() != 1:
                 wheels.rotate_right(speed)
             wheels.stop()
-            sleep(3)
+            #sleep(3)
 
 def full_rotation(speed=rotate_speed,angle=180):
     # status=sensor_status()
@@ -306,8 +330,9 @@ def navigate(route):
 #                 wheels.stop()
 #             else:
             line_following()
+            tim.init(period=500, mode=Timer.ONE_SHOT, callback=attach_junction_interrupts)
     wheels.stop()
-    sleep(1)
+    #sleep(1)
 
 # Timer callback for polling sensor status during line following.
 # This callback checks the two middle sensors (sensors[1] and sensors[2])
@@ -333,46 +358,56 @@ def button_reset():
 
 
 
-def pick_up_block(depo,distance_cm=5):
-    detach_junction_interrupts()   
+def pick_up_block(depo,distance_cm=6.5):
+    detach_junction_interrupts()
+    retract()
+    extend()   
     while distance_sensor.read() >= distance_cm:
-        line_following()
-    detach_polling()
+        if (data := code_reader.read_qr_code()) is not None:
+            print(data)
+            #break
+        else:
+            line_following(speed = 50)
     wheels.stop()
-    while True:
-        if (data := code_reader.read()) is not None:                
-            break
-    actuator.extend()
-    sleep(1)
-    actuator.retract()
-    sleep(1)
     if depo==1:
         rotate(direction="right",angle=180)
-        attach_junction_interrupts()
     elif depo==2:
         rotate(direction="left",angle=180)
-        attach_junction_interrupts()
         # if depo==1:
         #     rotate(direction="right",angle=180)
         # elif depo==2:
         #     rotate(direction="left",angle=180)
+    attach_junction_interrupts()
     return data
 
-def drop_off(distance_cm):
-        detach_junction_interrupts()
+def drop_off(distance=10/100,speed=50): #10 cm
+    detach_junction_interrupts()
     #if distance_sensor.read() < distance_cm: #we may not need this
-        detach_polling()
-        wheels.stop()
-        sleep(1)
-        actuator.extend()
-        sleep(1)
-        actuator.retract()
-        sleep(1)
-        wheels.reverse()
-        sleep(1) #need to adjust sleep time
-        rotate(direction="right",angle=180) #left right both okay
-        attach_junction_interrupts()
-        # rotate(direction="left",angle=180)
+    rpm=speed*rpm_full_load/100
+    w_wheel=rpm*2*3.14/60
+    v_wheel=d_wheel*w_wheel/2
+    time=distance/v_wheel
+    wheels.forward()
+    sleep(time)
+    wheels.stop()
+    #sleep(1)
+    extend()
+    n=0
+    while n<2: #may need to change this
+        if junction_flag!=0:
+            wheels.stop()
+            sleep(2)
+            detach_junction_interrupts()
+            n+=1
+            junction_flag=0            
+            tim.init(period=500, mode=Timer.ONE_SHOT, callback=attach_junction_interrupts)
+        wheels.reverse(speed=speed)
+    wheels.stop()
+    retract()
+    #rotate(direction="right",angle=180) #left right both okay
+    #attach_junction_interrupts() 
+    # rotate(direction="left",angle=180)
+    #junction interrupt reattached, stop at (1,1),when continue to navigate junction flag will instantly !=0
 
 
 def main():
