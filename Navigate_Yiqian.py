@@ -182,6 +182,167 @@ routes = {
     ]
 }
 
+routes = {
+    "D2": [
+        [  # Start to D2
+            [(1, 1), None],  # Move straight from start position
+            [(1, 1), lambda: rotate(direction="left")],  # Turn left at the first junction
+            [(0, 1), None],  # Move straight from start position
+            [(1, 1), lambda: rotate(direction="left")],  # Turn right at the second junction
+        ],
+        [  # D2 to start
+            [(0, 1), lambda: rotate(direction="left")], #imagine has just arrived at D2 instead of has actually picked up anything
+            [(1, 0), None],
+            [(0, 1), lambda: rotate(direction="right")],
+            [(1, 1), wheels.stop]
+        ],
+    ],
+    "D1": [
+        [  # Start to D1
+            [(1, 1), None],  # Move straight from start position
+            [(1, 1), lambda: rotate(direction="right")],  # Turn left at the first junction
+            [(1, 1), lambda: rotate(direction="right")],  # Turn right at the second junction
+        ],
+        [  # D1 to start
+            [(1, 0), lambda: rotate(direction="left")],
+            [(1, 0), lambda: rotate(direction="left")],
+            [(1, 1), wheels.stop]
+        ],
+    ],
+    "A": [
+        [  # D1 to A
+            [(1, 0), lambda: rotate(direction="left")],
+            [(1, 0), None],
+            [(0, 1), lambda: rotate(direction="right")],
+            [(1, 1), wheels.stop]
+        ],
+        [  # A to D1
+            #[(1, 1), wheels.stop],
+            [(1, 1), lambda: rotate(direction="right")],
+            [(0, 1), None],
+            [(0, 1), lambda: rotate(direction="right")],
+            #[(0, 0), wheels.stop]
+        ],
+        [  # D2 to A
+            [(0, 1), lambda: rotate(direction="right")],
+            [(1, 0), lambda: rotate(direction="left")],
+            [(1, 1), wheels.stop]
+        ],
+        [  # A to D2
+            [(1, 1), lambda: rotate(direction="right")],
+            [(1, 0), lambda: rotate(direction="left")],
+            #[(0, 0), wheels.stop]
+        ],
+        [  # A to Start
+            [(1, 1), lambda: rotate(direction="left")],
+            [(1, 0), lambda: rotate(direction="right")],
+            #[(0, 0), wheels.stop]
+        ]
+    ],
+    "B": [
+        [  # D1 to B
+            [(1, 0), None],
+            [(1, 0), lambda: rotate(direction="left")],
+            [(1, 0), lambda: rotate(direction="left")],
+            [(1, 1), wheels.stop]
+        ],
+        [  # B to D1
+            [(1, 1), lambda: rotate(direction="right")],
+            [(1, 1), lambda: rotate(direction="right")],
+            [(0, 1), None],
+            #[(0, 0), wheels.stop]
+        ],
+        [  # D2 to B
+            [(0, 1), None],
+            [(0, 1), lambda: rotate(direction="right")],
+            [(1, 0), None],
+            [(0, 1), lambda: rotate(direction="right")],
+            [(1, 1), wheels.stop]
+        ],
+        [  # B to D2
+            [(1, 1), lambda: rotate(direction="left")],
+            [(0, 1), None],
+            [(0, 1), lambda: rotate(direction="left")],
+            [(0, 1), None],
+            #[(0, 0), wheels.stop]
+        ],
+        [  # B to start
+            [(1, 1), lambda: rotate(direction="right")],
+            [(1, 1), lambda: rotate(direction="right")],
+            [(1, 1), lambda: rotate(direction="right")],
+            [(0, 1), lambda: rotate(direction="left")],
+            #[(0, 0), wheels.stop]
+        ]
+    ],
+    "C": [
+        [  # D1 to C
+            [(1, 0), None],
+            [(1, 0), None],
+            [(1, 0), lambda: rotate(direction="left")],
+            [(1, 0), None],
+            [(1, 0), lambda: rotate(direction="left")],
+            [(0, 1), lambda: rotate(direction="right")],
+            [(1, 1), wheels.stop]
+        ],
+        [  # C to D1
+            [(1, 1), lambda: rotate(direction="left")],
+            [(1, 1), lambda: rotate(direction="right")],
+            [(0, 1), None],
+            [(1, 0), lambda: rotate(direction="right")],
+            [(0, 1), None],
+            [(0, 1), None],
+            #[(0, 0), wheels.stop]
+        ],
+        [  # D2 to C
+            [(0, 1), None],
+            [(0, 1), lambda: rotate(direction="right")],
+            [(1, 0), lambda: rotate(direction="left")],
+            [(1, 0), lambda: rotate(direction="left")],
+            [(1, 1), wheels.stop]
+        ],
+        [  # C to D2
+            [(1, 1), lambda: rotate(direction="right")],
+            [(1, 1), lambda: rotate(direction="right")],
+            [(1, 1), lambda: rotate(direction="left")],
+            [(0, 1), None],
+            #[(0, 0), wheels.stop]
+        ]
+    ],
+    "D": [
+        [  # D1 to D
+            [(1, 0), None],
+            [(1, 0), None],
+            [(1, 0), lambda: rotate(direction="left")],
+            [(1, 0), lambda: rotate(direction="left")],
+            [(1, 1), wheels.stop]
+        ],
+        [  # D to D1
+            [(1, 1), lambda: rotate(direction="right")],
+            [(0, 1), lambda: rotate(direction="right")],
+            [(0, 1), None],
+            [(0, 1), None],
+            #[(0, 0), wheels.stop]
+        ],
+        [  # D2 to D
+            [(0, 1), None],
+            [(0, 1), None],
+            [(0, 1), lambda: rotate(direction="right")],
+            [(0, 1), None],
+            [(0, 1), lambda: rotate(direction="right")],
+            [(1, 1), wheels.stop]
+        ],
+        [  # D to D2
+            [(1, 1), lambda: rotate(direction="left")],
+            [(1, 0), None],
+            [(1, 0), lambda: rotate(direction="left")],
+            [(1, 0), None],
+            [(1, 0), None],
+            #[(0, 0), wheels.stop]
+        ]
+    ]
+}
+
+
 def speed_and_time(speed,distance_cm=6):
     rpm=speed*rpm_full_load/100
     w_wheel=rpm*2*3.14/60
@@ -379,7 +540,7 @@ def button_reset():
 
 
 
-def pick_up_block(a, depo=1, speed=80, d_rev=7, d_safe=6.2):
+def pick_up_block(a, depo=1, speed=80, d_rev=7, d_safe=6.5):
     # Compute wheel speed parameters based on safe distance.
     v_wheel, t_safe = speed_and_time(speed, d_safe)
     # Initial setup: perform actuator retraction and extension.
@@ -412,7 +573,8 @@ def pick_up_block(a, depo=1, speed=80, d_rev=7, d_safe=6.2):
             # If the robot reaches the safe distance without detecting a QR code,
             # reverse for a calculated duration and then try again.
             if attempt > 2:
-                break
+                data2='A'
+                continue #if we can't read just deliver to A(cloest point)
             _, t_safe = speed_and_time(speed, d_safe)
             wheels.reverse(speed)
             sleep(t_safe)
@@ -448,12 +610,13 @@ def drop_off_block():
     wheels.reverse(50)
     sleep(2)
     while True:
-        wheels.rerse(50)
+        wheels.reverse(50)
         if sensors[-1].read()==1 or sensors[0].read()==1:
             break
     wheels.stop()
 
-    
+
+
 routes = { #(1,0)->1 (0,1)->2 (1,1)->3
     "D2_to_start": [],
     "start_to_D1": [
