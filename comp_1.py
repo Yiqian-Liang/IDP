@@ -15,15 +15,6 @@ button = Button(pin = 14) #push button
 crash_sensor = Button(pin = 12)
 led = LED(pin = 17)
 
-'''
-#These assignments are outdated - the new configuration as per Owen's circuit board is above
-distance_sensor=DistanceSensor()
-code_reader=QRCodeReader()
-wheels = Wheel((7,6),(4,5)) #wheels changed # Initialize the wheels (GP4, GP5 for left wheel, GP7, GP6 for right wheel) before the order was wrong
-actuator = Actuator(8, 9) # Initialize linear actuator (GP8 for direction, GP9 for PWM control)
-sensors=[LineSensor(12),LineSensor(13),LineSensor(14),LineSensor(15)]
-'''
-
 direction=0
 forward_speed=90
 rotate_speed=80
@@ -472,23 +463,13 @@ def main():
         if n == n-1:
             data=pick_up_block(r= 1, depo=1)
         else:
-            data=pick_up_block(r = 1, depo=1)
+            data=pick_up_block(r = 0, depo=1)
             
-        if data == 'D' or data == 'C':
-            navigate(routes['A'][0])
-            drop_off(data = 'A')
-            sleep(2)
-            
-        else:
-            navigate(routes[data][0])
-            drop_off(data)
-            sleep(2)
+        navigate(routes[data][0])
+        drop_off(data)
             
         if i<n-1:
-            if data == 'D' or data == 'C':
-                navigate(routes['A'][1])
-            else:
-                navigate(routes[data][1])
+            navigate(routes[data][1])
                 
         else:
             if data == 'D' or data == 'C':
@@ -500,11 +481,11 @@ def main():
                 led.stop_flash()
                 wheels.stop()
 
-    '''for i in range(n):
-        data=pick_up_block(depo=1)
+    for i in range(n):
+        data=pick_up_block(depo=2)
         navigate(routes[data][2])
         drop_off(data)
-        sleep(2) 
+        #sleep(2) 
         if i<n-1:
             navigate(routes[data][2])
         else:
