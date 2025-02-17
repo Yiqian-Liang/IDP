@@ -224,18 +224,18 @@ def junction_detected(pin):
 def line_following(direction=direction,speed=forward_speed):
     if direction == 0:
         if sensors[2].read() == 1:
-            wheels.turn_right(speed)
+            wheels.turn_right(speed=speed,direction=direction)
         elif sensors[1].read() == 1:
-            wheels.turn_left(speed)
+            wheels.turn_left(speed=speed,direction=direction)
         else:
-            wheels.forward(speed)
+            wheels.forward(speed=speed,direction=direction)
     else:
         if sensors[2].read() == 1:
-            wheels.turn_left(speed)
-        elif sensors[1].read() == 1:
             wheels.turn_right(speed)
+        elif sensors[1].read() == 1:
+            wheels.turn_left(speed=speed,direction=direction)
         else:
-            wheels.reverse(speed)
+            wheels.reverse(speed=speed)
 
 def attach_junction_interrupts(timer = None):
     sensors[0].pin.irq(trigger=Pin.IRQ_RISING, handler=junction_detected)
@@ -379,86 +379,81 @@ def button_reset():
 
 
 
-def pick_up_block(a,depo=1,speed=80,d_rev=7,d_safe=6):
-    v_wheel=speed_and_time(speed,d_safe)[0]
-    #print(v_wheel)
-    retract(100)
-    extend(100)
-    wheels.reverse(speed)
-    sleep(rev_time)
-    data1,data2 = None,None
-    attempts = 2  
-    attempt_count = 0
-    tim=Timer()
-    n=0
+def pick_up_block(a, depo=1, speed=80, d_rev=7, d_safe=6.2):
+    # Compute wheel speed parameters based on safe distance.
+    v_wheel, t_safe = speed_and_time(speed, d_safe)
+    # Initial setup: perform actuator retraction and extension.
+#     retract(100)
+#     extend(100)  
+    # Reverse for a preset duration (rev_time should be defined globally).
+    
+    data1 = None
+    data2 = None
+    attempt=2
 
-    while distance_sensor.read() >= d_safe:
-        data1 = code_reader.read_qr_code()  # read QR code
-        if data in ['A','B','C','D']:
-            print("QR Code Detected:", data)
-            data2 = data1  # read QR code
-            line_following(speed=speed)  # continue line following
-        else:
-            attempt_count += 1
-            if attempt_count >= attempts:
-                line_following(speed=speed)
+    # Main loop: continue until a valid QR code is detected.
+    while True:
+        # Inner loop: while the distance sensor reading is above the safe threshold,
+        # perform line following.
+        while distance_sensor.read() >= d_safe:
+            line_following(speed=speed)  # Execute line following.
+            if data1 is None:
+                data1 = code_reader.read_qr_code()  # Attempt to read QR code.
+            # If a valid QR code is detected, save it and break out of the inner loop.
+            if data1 in ['A', 'B', 'C', 'D']:
+                data2 = data1
                 continue
+        # If a valid QR code was detected, print it and exit the main loop.
+        if data2 in ['A', 'B', 'C', 'D']:
+            print("QR Code Detected:", data2)
+            break
+        else:
+            attempt += 1
+            # If the robot reaches the safe distance without detecting a QR code,
+            # reverse for a calculated duration and then try again.
+            if attempt > 2:
+                break
+            _, t_safe = speed_and_time(speed, d_safe)
             wheels.reverse(speed)
-            sleep(speed_and_time(speed,d_safe)[1])
-            #wheels.stop()
-    wheels.stop()
-    wheels.reverse(speed/2)
-    sleep(speed_and_time(speed/2,d_safe/4)[1])
+            sleep(t_safe)
+            wheels.stop()
+    # Continue with any subsequent actions (e.g., moving forward, rotating, etc.)           
+    # Fine adjustment: reverse slowly for a short distance.
+    #_, t_adjust = speed_and_time(speed/2, d_safe/5)
+    wheels.reverse(40)
+    #sleep(t_adjust)   
+    # Retract actuator and then move forward.
     retract()
-    wheels.reverse(speed)
-    if a-0.5>0:
-        sleep(speed_and_time(speed,(a-0.5)*d_rev)[1])
+    wheels.stop()
+    if a > 2:
+        _, t_reverse = speed_and_time(speed, (a - 2.5) * d_rev)
+        wheels.reverse(speed)
+        sleep(t_reverse)
         wheels.stop()
-        sleep(2) #not using junction flag so don't need to reverse
-    if depo==1:
-        full_rotation(1)  #rotate(direction="right",angle=180)
-        #if it too deviated we may need to do line following(set up timer) first then reverse
-    elif depo==2:
-        full_rotation(0)  #rotate(direction="left",angle=180)
-    '''This is for calibration, in case that the robot is too deviated from the line'''
-    start = time.time()
-    while time.time()-start < speed_and_time(speed, a*d_rev)[1]:  #may use fixed values
-        line_following(speed)
-    #print(time.time()-start,speed_and_time(speed, a*d_rev)[1]) wrong code
-    wheels.stop()
-    sleep(2)
-    wheels.reverse(speed)
-    sleep(speed_and_time(speed,(a+1)*d_rev)[1])
-    wheels.stop()
-    sleep(1.5)
-        # if depo==1:
-        #     rotate(direction="right",angle=180)
-        # elif depo==2:
-        #     rotate(direction="left",angle=180)
-    attach_junction_interrupts()
+        sleep(2)
+    # Rotate 180° based on depo parameter.
+    if depo == 1:
+        full_rotation(1)  # Rotate right.
+    elif depo == 2:
+        full_rotation(0)  # Rotate left.
     return data2
-
-def drop_off(distance=16,speed=60): #10 cm
+def drop_off_block():
     detach_junction_interrupts()
-    #if distance_sensor.read() < distance_cm: #we may not need this
-    start = time.time()
-    while time.time()-start < speed_and_time(speed)[1]:  #may use fixed values
-        line_following(speed)
-    print(time.time()-speed_and_time(speed)[1])
+#    extend()
+#     junction_flag=0
+#     tim=Timer()
+#     #tim.init(period=500, mode=Timer.ONE_SHOT, callback=attach_junction_interrupts)
+#     wheels.reverse(speed=50)
+#     sleep(speed_and_time(50, 6)[1])
+    wheels.reverse(50)
+    sleep(2)
+    while True:
+        wheels.rerse(50)
+        if sensors[-1].read()==1 or sensors[0].read()==1:
+            break
     wheels.stop()
-    '''above is for extra distance of forward line following(calibration) may be able to remove'''
-    extend()
-    wheels.reverse(speed)
-    sleep(speed_and_time(speed, distance)[1])
-    retract()
-    full_rotation(1)
-    wheels.reverse(speed)
-    sleep(speed_and_time(speed, 10)[1])#again, getting extra forward line following distance
-    wheels.stop()
-    #rotate(direction="right",angle=180) #left right both okay
-    #attach_junction_interrupts() 
-    # rotate(direction="left",angle=180)
-    #junction interrupt reattached, stop at (1,1),when continue to navigate junction flag will instantly !=0
+
+    
 routes = { #(1,0)->1 (0,1)->2 (1,1)->3
     "D2_to_start": [],
     "start_to_D1": [
