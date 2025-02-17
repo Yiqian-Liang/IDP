@@ -448,23 +448,8 @@ def drop_off(data):
 
 
 def main():
-    while button.read() == 0:
-        pass
-    led.start_flash()
-    
-    n = 4
-    for i in range(n):
-        data=pick_up_block(depo=2)
-        navigate(routes[data][2])
-        drop_off(data)
-        sleep(2) 
-        if i<n-1:
-            navigate(routes[data][2])
-        else:
-            navigate(routes["D2_to_start"])
-            led.stop_flash() #stops flashing as soon as finished last route
-    
-    '''wheels.stop()
+
+    wheels.stop()
     actuator.stop()
     led.stop_flash()
     
@@ -513,7 +498,7 @@ def main():
             else:
                 navigate(routes[data][4])
                 led.stop_flash()
-                wheels.stop()'''
+                wheels.stop()
 
     '''for i in range(n):
         data=pick_up_block(depo=1)
