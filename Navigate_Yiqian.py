@@ -2,6 +2,7 @@ from motor import Wheel, Actuator  # Import the Wheel and Actuator classes
 from time import sleep 
 from sensors import QRCodeReader, DistanceSensor, LineSensor, LED, Button
 from machine import Pin, PWM, I2C,Timer
+import random
 
 #---------------------- Set up motors
 wheels = Wheel((7,6),(4,5)) # Initialize the wheels (GP7, GP6 for left wheel, GP4, GP5 for right wheel) before the order was wrong
@@ -26,12 +27,12 @@ sensors=[LineSensor(12),LineSensor(13),LineSensor(14),LineSensor(15)]
 d_wheel=6.5/100 #in meters
 D=0.19 #in meters ditance between the wheels
 direction=0
-forward_speed=80
-rotate_speed=60
-forward_distance=5/100 #5cm
+forward_speed=90
+rotate_speed=90
+forward_distance=3/100 #5cm
 reverse_speed=40
 actuator_speed=80
-extension=14 #12.7mm
+extension=14 #14mm
 drop_off_distance=10 #10cm
 actuator_max_speed=7 #7mm/s
 rpm_full_load=40 #rpm=speed*rpm_full_load/100
@@ -217,8 +218,7 @@ routes = {
             [(1, 1), wheels.stop]
         ],
         [  # A to D1
-            #[(1, 1), wheels.stop],
-            [(1, 1), lambda: rotate(direction="right")],
+            #[(1, 1), lambda: rotate(direction="left")],
             [(0, 1), None],
             [(0, 1), lambda: rotate(direction="right")],
             #[(0, 0), wheels.stop]
@@ -247,7 +247,7 @@ routes = {
             [(1, 1), wheels.stop]
         ],
         [  # B to D1
-            [(1, 1), lambda: rotate(direction="right")],
+            #[(1, 1), lambda: rotate(direction="right")],
             [(1, 1), lambda: rotate(direction="right")],
             [(0, 1), None],
             #[(0, 0), wheels.stop]
@@ -260,14 +260,16 @@ routes = {
             [(1, 1), wheels.stop]
         ],
         [  # B to D2
-            [(1, 1), lambda: rotate(direction="left")],
+            #[(1, 1), lambda: rotate(direction="right")],
+            [(1, 1), lambda: rotate(direction="right")],
+            [(1, 1), lambda: rotate(direction="right")],
+            [(0, 1), None],
             [(0, 1), None],
             [(0, 1), lambda: rotate(direction="left")],
-            [(0, 1), None],
             #[(0, 0), wheels.stop]
         ],
         [  # B to start
-            [(1, 1), lambda: rotate(direction="right")],
+            #[(1, 1), lambda: rotate(direction="right")],
             [(1, 1), lambda: rotate(direction="right")],
             [(1, 1), lambda: rotate(direction="right")],
             [(0, 1), lambda: rotate(direction="left")],
@@ -277,38 +279,42 @@ routes = {
     "C": [
         [  # D1 to C
             [(1, 0), None],
-            [(1, 0), None],
             [(1, 0), lambda: rotate(direction="left")],
             [(1, 0), None],
-            [(1, 0), lambda: rotate(direction="left")],
-            [(0, 1), lambda: rotate(direction="right")],
+            [(1, 0), lambda: rotate(direction="right")],
+            [(0, 1), lambda: rotate(direction="left")],
             [(1, 1), wheels.stop]
         ],
         [  # C to D1
+           # [(1, 1), lambda: rotate(direction="right")],
             [(1, 1), lambda: rotate(direction="left")],
-            [(1, 1), lambda: rotate(direction="right")],
             [(0, 1), None],
             [(1, 0), lambda: rotate(direction="right")],
-            [(0, 1), None],
-            [(0, 1), None],
-            #[(0, 0), wheels.stop]
+            [(0, 1), None]
         ],
         [  # D2 to C
             [(0, 1), None],
             [(0, 1), lambda: rotate(direction="right")],
             [(1, 0), lambda: rotate(direction="left")],
             [(1, 0), lambda: rotate(direction="left")],
-            [(1, 1), wheels.stop]
         ],
         [  # C to D2
-            [(1, 1), lambda: rotate(direction="right")],
+            #[(1, 1), lambda: rotate(direction="right")],
             [(1, 1), lambda: rotate(direction="right")],
             [(1, 1), lambda: rotate(direction="left")],
             [(0, 1), None],
-            #[(0, 0), wheels.stop]
+        ],
+        [  # C to start
+            #[(1, 1), lambda: rotate(direction="right")],
+            [(1, 1), lambda: rotate(direction="left")],
+            [(0, 1), None],
+            [(1, 0), lambda: rotate(direction="right")],
+            [(1, 0), lambda: rotate(direction="right")],
+            [(1, 0), lambda: rotate(direction="left")]
         ]
     ],
-    "D": [
+    "D":
+    [
         [  # D1 to D
             [(1, 0), None],
             [(1, 0), None],
@@ -317,7 +323,7 @@ routes = {
             [(1, 1), wheels.stop]
         ],
         [  # D to D1
-            [(1, 1), lambda: rotate(direction="right")],
+            #[(1, 1), lambda: rotate(direction="right")],
             [(0, 1), lambda: rotate(direction="right")],
             [(0, 1), None],
             [(0, 1), None],
@@ -332,16 +338,22 @@ routes = {
             [(1, 1), wheels.stop]
         ],
         [  # D to D2
-            [(1, 1), lambda: rotate(direction="left")],
+            #[(1, 1), lambda: rotate(direction="left")],
             [(1, 0), None],
             [(1, 0), lambda: rotate(direction="left")],
             [(1, 0), None],
             [(1, 0), None],
             #[(0, 0), wheels.stop]
+        ],
+        [  # D to D1
+            #[(1, 1), lambda: rotate(direction="right")],
+            [(0, 1), lambda: rotate(direction="right")],
+            [(0, 1), None],
+            [(0, 1), lambda: rotate(direction="right")],
+            [(0, 1), lambda: rotate(direction="left")]
         ]
     ]
 }
-
 
 def speed_and_time(speed,distance_cm=6):
     rpm=speed*rpm_full_load/100
@@ -354,11 +366,13 @@ def extend(speed=actuator_speed): #extend actuator
     actuator.extend(speed)
     sleep(time)
     actuator.stop()
+    return time
 def retract(speed=actuator_speed): #retract actuator
     time=extension/(actuator_max_speed*speed/100)*1.25 #EXTRA FOR SAFETY
     actuator.retract(speed)
     sleep(time)
     actuator.stop()
+    return time
 
 # Use dict: 
 # - The first list is from D1 to the destination.
@@ -570,22 +584,21 @@ def pick_up_block(a, depo=1, speed=80, d_rev=7, d_safe=6.5):
             break
         else:
             attempt += 1
-            # If the robot reaches the safe distance without detecting a QR code,
-            # reverse for a calculated duration and then try again.
-            if attempt > 2:
-                data2='A'
-                continue #if we can't read just deliver to A(cloest point)
+            if attempt > 2:             # If the robot reaches the safe distance without detecting a QR code,# reverse for a calculated duration and then try again.
+                data2=random.choice(['A', 'B', 'C', 'D'])
+                continue #if we can't read just deliver to random point)
             _, t_safe = speed_and_time(speed, d_safe)
             wheels.reverse(speed)
             sleep(t_safe)
             wheels.stop()
-    # Continue with any subsequent actions (e.g., moving forward, rotating, etc.)           
+    # Continue with any subsequent actions           
     # Fine adjustment: reverse slowly for a short distance.
     #_, t_adjust = speed_and_time(speed/2, d_safe/5)
-    wheels.reverse(40)
-    #sleep(t_adjust)   
-    # Retract actuator and then move forward.
-    retract()
+    #sleep(t_adjust)
+    actuator.retract(speed=100)
+    sleep(1)
+    wheels.reverse(speed/2)
+    wheels.stop()
     wheels.stop()
     if a > 2:
         _, t_reverse = speed_and_time(speed, (a - 2.5) * d_rev)
@@ -598,22 +611,28 @@ def pick_up_block(a, depo=1, speed=80, d_rev=7, d_safe=6.5):
         full_rotation(1)  # Rotate right.
     elif depo == 2:
         full_rotation(0)  # Rotate left.
+    actuator.stop()
     return data2
-def drop_off_block():
+def drop_off_block(data,speed=50,depo=1):
     detach_junction_interrupts()
-#    extend()
-#     junction_flag=0
-#     tim=Timer()
-#     #tim.init(period=500, mode=Timer.ONE_SHOT, callback=attach_junction_interrupts)
-#     wheels.reverse(speed=50)
-#     sleep(speed_and_time(50, 6)[1])
-    wheels.reverse(50)
-    sleep(2)
+    start=time.time()
+    while time.time()-start < speed_and_time(speed=50)[1] :  #may change forward distance
+        line_following(speed)
+    wheels.reverse(speed)
+    extend(80) #need to check after extending whether the robot has passed the drop off line
     while True:
-        wheels.reverse(50)
-        if sensors[-1].read()==1 or sensors[0].read()==1:
+        wheels.reverse(speed)
+        if sensors[-1].read()==1 or sensors[0].read()==1: #we're making it loose checking here
             break
     wheels.stop()
+    if data == "C":
+        rotate(direction="left")
+    elif data in ["A", "B", "D"]:
+        if depo == 1:
+            rotate(direction="right")
+        else:
+            rotate(direction="left")
+            
 
 
 
@@ -774,19 +793,19 @@ def main():
     LED.start_flash() #starts flashing as soon as starts first route
     while True:
         line_following()
-    actuator.extend()
+    #actuator.extend()
     
     navigate(routes["A"][0])
     navigate(routes["A"][1])
     print("code_reader.read()=",code_reader.read())
     pick_up_block(depo=1)
-    drop_off(distance_cm=10)
+    drop_off(data='A')
     navigate(routes["start_to_D1"])
     n=4
     for i in range(n):
         data=pick_up_block(a=i,depo=1)
         navigate(routes[data][0])
-        drop_off()
+        drop_off(data=data)
         #drop_off_block(data)
         sleep(2) 
         if i<n-1:
@@ -796,7 +815,7 @@ def main():
     for i in range(n):
         data=pick_up_block(a=i,depo=1)
         navigate(routes[data][2])
-        drop_off()
+        drop_off(data=data,depo=2)
         #drop_off_block(data)
         sleep(2) 
         if i<n-1:
