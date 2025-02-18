@@ -127,7 +127,7 @@ routes = {
             [(1, 0), lambda: rotate(direction="left")],
             [(1, 0), None],
             [(0, 1), lambda: rotate(direction="right")],
-            [(1, 1), wheels.stop]
+            [(1, 1), None]
         ],
         [  # A to D1
             [(1, 1), lambda: rotate(direction="left")],
@@ -138,7 +138,7 @@ routes = {
         [  # D2 to A
             [(0, 1), lambda: rotate(direction="right")],
             [(1, 0), lambda: rotate(direction="left")],
-            [(1, 1), wheels.stop]
+            [(1, 1), None]
         ],
         [  # A to D2
             [(1, 1), lambda: rotate(direction="right")],
@@ -156,7 +156,7 @@ routes = {
             [(1, 0), None],
             [(1, 0), lambda: rotate(direction="left")],
             [(1, 0), lambda: rotate(direction="left")],
-            [(1, 1), wheels.stop]
+            [(1, 1), None]
         ],
         [  # B to D1
             [(1, 1), lambda: rotate(direction="right")],
@@ -195,7 +195,7 @@ routes = {
             [(1, 0), None],
             [(1, 0), lambda: rotate(direction="right")],
             [(0, 1), lambda: rotate(direction="left")],
-            [(1, 1), wheels.stop]
+            [(1, 1), None]
         ],
         [  # C to D1
             [(1, 1), lambda: rotate(direction="right")],
@@ -232,7 +232,7 @@ routes = {
             [(1, 0), None],
             [(1, 0), lambda: rotate(direction="left")],
             [(1, 0), lambda: rotate(direction="left")],
-            [(1, 1), wheels.stop]
+            [(1, 1), None]
         ],
         [  # D to D1
             [(1, 1), lambda: rotate(direction="right")],
@@ -247,7 +247,7 @@ routes = {
             [(0, 1), lambda: rotate(direction="right")],
             [(0, 1), None],
             [(0, 1), lambda: rotate(direction="right")],
-            [(1, 1), wheels.stop]
+            [(1, 1), None]
         ],
         [  # D to D2
             [(1, 1), lambda: rotate(direction="left")],
