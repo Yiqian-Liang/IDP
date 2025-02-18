@@ -113,10 +113,11 @@ def pick_up_block(r = 0, depo = 1,distance_cm=6.8):  #set r if needs to revers b
         attach_junction_interrupts()
     return data
 
-def drop_off(data):
+def drop_off(data, depo = 1):
         detach_junction_interrupts()
-        wheels.forward()
-        sleep(0.4)
+        if depo == 1:
+            wheels.forward()
+            sleep(0.4)
         wheels.stop()
             
         actuator.extend()
