@@ -114,7 +114,6 @@ def pick_up(a, depo=1, speed=80, d_rev=7, d_safe=6.5):
     #_, t_adjust = speed_and_time(speed/2, d_safe/5)
     #sleep(t_adjust)
     actuator.retract(speed=100)
-    sleep(1)
     wheels.reverse(speed/2)
     wheels.stop()
     wheels.stop()
