@@ -6,7 +6,6 @@ from do_route import routes, rotate, full_rotation, wheels, attach_junction_inte
 import jf
 
 #---------------------- Set up motors
-#wheels = Wheel((7,6),(4,5)) # Initialize the wheels (GP4, GP5 for left wheel, GP7, GP6 for right wheel) before the order was wrong
 actuator = Actuator(3, 2) # Initialize linear actuator (GP8 for direction, GP9 for PWM control)
 
 #-----------------------Set up sensors
@@ -31,8 +30,7 @@ def line_following(speed = 90):
 def navigate(route):
     n_steps = len(route)
     cur_step = 0
-    #global jf.junction_flag
-    jf.junction_flag = 0
+    jf.junction_flag = 0 #global jf.junction_flag
 
     #Set up timer
     tim = Timer()
@@ -56,19 +54,12 @@ def navigate(route):
                 tim.init(period=500, mode=Timer.ONE_SHOT, callback=attach_junction_interrupts)
                 cur_step += 1
         else:
-            #may just use the line following function here
-#             if distance_sensor.read() < 10: #extra safety not to crash
-#                 wheels.stop()
-#             else:
             line_following()
     wheels.stop()
     sleep(1)
 
 
-def pick_up_block(r = 0, depo = 1,distance_cm=6.8):
-    #set r if needs to revers before 180
-    #detach_junction_interrupts()
-    #global jf.junction_flag
+def pick_up_block(r = 0, depo = 1,distance_cm=6.8):  #set r if needs to revers before 180 
     jf.junction_flag =0
     attach_junction_interrupts()
     actuator.retract(speed = 100)
@@ -120,15 +111,10 @@ def pick_up_block(r = 0, depo = 1,distance_cm=6.8):
     elif depo==2:
         full_rotation(direction=0)
         attach_junction_interrupts()
-        # if depo==1:
-        #     rotate(direction="right",angle=180)
-        # elif depo==2:
-        #     rotate(direction="left",angle=180)
     return data
 
 def drop_off(data):
         detach_junction_interrupts()
-    #if distance_sensor.read() < distance_cm: #we may not need this
         wheels.forward()
         sleep(0.4)
         wheels.stop()
@@ -152,11 +138,8 @@ def drop_off(data):
         else:
             full_rotation(direction = 0)
         attach_junction_interrupts()
-        # rotate(direction="left",angle=180)
-
 
 def main():
-
 
     wheels.stop()
     actuator.stop()
@@ -172,7 +155,6 @@ def main():
 
     led.start_flash() #starts flashing as soon as starts first route
     
-    #attach_button_interrupt()
 
 #this is the actual main structure for the competition
     navigate(routes["D1"][0])
