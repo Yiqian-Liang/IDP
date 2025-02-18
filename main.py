@@ -118,9 +118,8 @@ def pick_up(a, depo=1, speed=80, d_rev=7, d_safe=6.5):
     # Fine adjustment: reverse slowly for a short distance.
     #_, t_adjust = speed_and_time(speed/2, d_safe/5)
     #sleep(t_adjust)
-    actuator.retract(speed=100)
     wheels.reverse(speed/2)
-    wheels.stop()
+    actuator.retract(speed=100)
     wheels.stop()
     if a > 2:
         _, t_reverse = speed_and_time(speed, (a - 2.5) * d_rev)
