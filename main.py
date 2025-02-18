@@ -149,60 +149,6 @@ def pick_up_block(r = 0, depo = 1,distance_cm=6.8):  #set r if needs to revers b
             print(data)
             break
         elif distance_sensor.read() >= distance_cm:
-            line_following(speed = 60)
-        else:
-            wheels.reverse()
-            sleep(1)
-    wheels.stop()
-    
-         
-    while distance_sensor.read() >= distance_cm:
-        print(distance_sensor.read())
-        if jf.junction_flag!=0:
-            wheels.forward(speed=50)
-            sleep(0.5)
-            jf.junction_flag = 0
-        else:
-            line_following(speed = 50)
-    
-    wheels.stop()
-    
-    if r != 1:
-        pass
-    else:
-        wheels.reverse(speed = 60)
-        sleep(0.3)
-        wheels.stop()
-        
-    actuator.retract()
-    sleep(3)
-    actuator.stop()
-    
-    if r == 1:
-        wheels.reverse()
-        sleep(1)
-
-    if depo==1:
-        full_rotation(direction=1)
-        attach_junction_interrupts()
-    elif depo==2:
-        full_rotation(direction=0)
-        attach_junction_interrupts()
-    return data
-
-def pick_up_block(r = 0, depo = 1,distance_cm=6.8):  #set r if needs to revers before 180 
-    jf.junction_flag =0
-    attach_junction_interrupts()
-    actuator.retract(speed = 100)
-    sleep(0.1)
-    actuator.extend()
-    sleep(2.55)
-    actuator.stop()
-    while True:
-        if (data := code_reader.read_qr_code()) is not None:
-            print(data)
-            break
-        elif distance_sensor.read() >= distance_cm:
             line_following(speed = 80)
         else:
             wheels.reverse()
