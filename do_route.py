@@ -8,11 +8,25 @@ wheels = Wheel((7,6),(4,5))
 
 sensors=[LineSensor(18),LineSensor(19),LineSensor(20),LineSensor(21)]
 
-rotate_speed=100
-forward_distance=2/100
-rpm_full_load = 40
-d_wheel = 6.5/100
-D = 19/100
+d_wheel=6.5/100 #in meters
+D=0.19 #in meters ditance between the wheels
+direction=0
+forward_speed=90
+rotate_speed=90
+forward_distance=3/100 #5cm
+reverse_speed=40
+actuator_speed=80
+extension=14 #14mm
+drop_off_distance=10 #10cm
+actuator_max_speed=7 #7mm/s
+rpm_full_load=40 #rpm=speed*rpm_full_load/100
+
+def speed_and_time(speed,distance_cm=6):
+    rpm=speed*rpm_full_load/100
+    w_wheel=rpm*2*3.14/60
+    v_wheel=d_wheel*w_wheel/2
+    time=distance_cm/(v_wheel*100)
+    return v_wheel,time
 
 def attach_junction_interrupts(timer = None):
     sensors[0].pin.irq(trigger=Pin.IRQ_RISING, handler=junction_detected)
