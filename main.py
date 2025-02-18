@@ -87,7 +87,11 @@ def pick_up(a, depo=1, speed=80, d_rev=7, d_safe=6.5):
     
     data1 = None
     data2 = None
+<<<<<<< HEAD
     attempt=0
+=======
+    attempt=2
+>>>>>>> 441da97b3908de4909ae78d2eeb73d95cfdfbb08
     if a>=1:
         wheels.forward(speed/2)
     extend()
