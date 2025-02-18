@@ -290,15 +290,11 @@ def main():
     
 
 #this is the actual main structure for the competition
+
     navigate(routes["D1"][0])
     n=4
     for i in range(n):
-        if i == n-1:
-            print('last block')
-            data=pick_up(r= 1, depo=1)
-        else:
-            data=pick_up(r = 0, depo=1)
-            
+        data=pick_up(a=i, depo=1)           
         navigate(routes[data][0])
         drop_off(data)
             
@@ -311,12 +307,13 @@ def main():
                 navigate(routes['A'][2])
                 drop_off(data = 'A')
                 navigate(routes['A'][4])
-                wheels.forward()
-                sleep(1.7)
-                led.stop_flash()
-                wheels.stop()
             else:
                 navigate(routes[data][4])
+            wheels.forward()
+            sleep(1.8)
+            led.stop_flash()
+            wheels.stop()
+
     
 if __name__ == "__main__":
     main()
