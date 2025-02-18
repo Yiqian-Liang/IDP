@@ -180,22 +180,16 @@ def main():
         else:
             if time.time()-start<180:
                 navigate(routes[data][3])
-                data=pick_up_block(r=0, depo=2)
-                navigate(routes[data][4])
+                pick_up_block(depo = 2)
+                navigate(routes['A'][2])
+                drop_off(data = 'A')
+                navigate(routes['A'][4])
+                wheels.forward()
+                sleep(1.7)
+                led.stop_flash()
+                wheels.stop()
             else:
                 navigate(routes[data][4])
-            navigate(routes[data][1])
-                
-        else:
-            navigate(routes[data][3])
-            pick_up_block(depo = 2)
-            navigate(routes['A'][2])
-            drop_off(data = 'A')
-            navigate(routes['A'][4])
-            wheels.forward()
-            sleep(1.7)
-            led.stop_flash()
-            wheels.stop()
     
 if __name__ == "__main__":
     main()
