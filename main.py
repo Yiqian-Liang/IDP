@@ -238,9 +238,10 @@ def main():
         pass
 
     start=time.time()
-    actuator.retract(speed = 100)
-    sleep(2.5)
-    actuator.stop()
+    retract()
+    # actuator.retract(speed = 100)
+    # sleep(2.5)
+    # actuator.stop()
 
     led.start_flash() #starts flashing as soon as starts first route
     
