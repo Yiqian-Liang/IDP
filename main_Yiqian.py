@@ -28,7 +28,17 @@ extension=14 #14mm
 drop_off_distance=10 #10cm
 actuator_max_speed=7 #7mm/s
 rpm_full_load=40 #rpm=speed*rpm_full_load/100
-
+junction_flag=0
+def attach_junction_interrupts(timer = None):
+    sensors[0].pin.irq(trigger=Pin.IRQ_RISING, handler=junction_detected)
+    sensors[-1].pin.irq(trigger=Pin.IRQ_RISING, handler=junction_detected)
+def detach_junction_interrupts():
+    sensors[0].pin.irq(trigger = Pin.IRQ_RISING, handler = None)
+    sensors[-1].pin.irq(trigger = Pin.IRQ_RISING, handler = None)
+def junction_detected(pin):
+    global junction_flag
+    junction_flag = 1  # Set the flag when an interrupt occurs
+    return junction_flag
 def speed_and_time(speed,distance_cm=6):
     rpm=speed*rpm_full_load/100
     w_wheel=rpm*2*3.14/60
@@ -203,34 +213,55 @@ def pick_up_block(r = 0, depo = 1,distance_cm=6.8):  #set r if needs to revers b
         attach_junction_interrupts()
     return data
 
-def drop_off(data):
-        detach_junction_interrupts()
-        wheels.forward()
-        sleep(0.4)
-        wheels.stop()
-            
-        actuator.extend()
-        sleep(2.55)
-        actuator.stop()
-        wheels.reverse()
-        sleep(0.55) #need to adjust sleep time
-        wheels.stop()
-        actuator.retract()
-        sleep(3)
-        actuator.stop()
-        if data == 'D':
-            full_rotation(direction = 1)
-            wheels.reverse(speed = 60)
-            sleep(0.8)
-            wheels.stop()
-        elif data == 'C':
-            full_rotation(direction = 1)
+def drop_off_block(data,speed=50,depo=1):
+    detach_junction_interrupts()
+    start=time.time()
+    time1=(speed_and_time(speed=50,distance_cm=20)[1])
+    while time.time()-start < time1 :  #may change forward distance
+        line_following(speed=50)
+    print(time.time()-start)
+    print('b')
+    wheels.stop()
+    sleep(1)
+    print('a')
+#     wheels.reverse(speed=50)
+    extend(100) #need to check after extending whether the robot has passed the drop off line
+    n=0
+    wheels.reverse(speed=speed)
+    attach_junction_interrupts()
+    while True:
+        if junction_flag==1:
+            n+=1
+            junction_flag=0
+            detach_junction_interrupts()
+            timer.init(period=1000, mode=Timer.ONE_SHOT, callback=attach_junction_interrupts) #attach 1s later
+            if n==2:
+                break
+    wheels.stop()
+    print('c')
+# Alternative extra safety
+#     start1=time.time()
+#     while (time.time() - start1 < speed_and_time(speed=50, distance_cm=30)[1]):
+#         wheels.reverse(speed=50)
+#     print('good')
+#     attach_junction_interrupts()
+#     while True:
+# #         wheels.reverse(speed=50)
+#         if junction_detected():
+#             break
+    # print(f"Sensors: {sensors[-1].read()}, {sensors[0].read()}")  # Debug
+    # print(f"Time elapsed: {time.time() - start}")  # Debug
+    # print(time.time-start)
+    # wheels.stop()
+    if data == "C":
+        rotate(direction="left")
+    elif data in ["A", "B", "D"]:
+        if depo == 1:
+            rotate(direction="right")
         else:
-            full_rotation(direction = 0)
-        attach_junction_interrupts()
+            rotate(direction="left")
 
 def main():
-
     wheels.stop()
     actuator.stop()
     led.stop_flash()
