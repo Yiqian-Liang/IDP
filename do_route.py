@@ -8,7 +8,7 @@ wheels = Wheel((7,6),(4,5))
 
 sensors=[LineSensor(18),LineSensor(19),LineSensor(20),LineSensor(21)]
 
-rotate_speed=80
+rotate_speed=100
 forward_distance=2/100
 rpm_full_load = 40
 d_wheel = 6.5/100
@@ -60,7 +60,7 @@ def rotate(direction,speed=rotate_speed,angle=90):
             wheels.stop()
             #sleep(3)
                 
-def full_rotation(direction,speed=rotate_speed*0.7,angle=180):
+def full_rotation(direction,speed=rotate_speed*0.8,angle=180):
     # status=sensor_status()
     # Detect a junction (both left and right sensors detect the line)
     # if status[0] == 1 or status[-1] == 1:
