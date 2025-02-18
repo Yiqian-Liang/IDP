@@ -5,6 +5,7 @@ from sensors import QRCodeReader, DistanceSensor, LineSensor, LED, Button
 from machine import Pin, PWM, I2C, Timer
 from do_route import speed_and_time, routes, rotate, full_rotation, wheels, attach_junction_interrupts, detach_junction_interrupts, junction_detected
 import jf
+import random
 
 #---------------------- Set up motors
 actuator = Actuator(3, 2) # Initialize linear actuator (GP8 for direction, GP9 for PWM control)
@@ -86,7 +87,9 @@ def pick_up(a, depo=1, speed=80, d_rev=7, d_safe=6.5):
     
     data1 = None
     data2 = None
-    attempt=2
+    attempt=0
+    if a>=1:
+        wheels.forward(speed/2)
     extend()
 
     # Main loop: continue until a valid QR code is detected.
@@ -109,11 +112,12 @@ def pick_up(a, depo=1, speed=80, d_rev=7, d_safe=6.5):
             attempt += 1
             if attempt > 2:             # If the robot reaches the safe distance without detecting a QR code,# reverse for a calculated duration and then try again.
                 data2=random.choice(['A', 'B', 'C', 'D'])
-                continue #if we can't read just deliver to random point)
-            _, t_safe = speed_and_time(speed, d_safe)
-            wheels.reverse(speed)
-            sleep(t_safe)
-            wheels.stop()
+                break #if we can't read just deliver to random point)
+            else:
+                _, t_safe = speed_and_time(speed, d_safe)
+                wheels.reverse(speed)
+                sleep(t_safe)
+                wheels.stop()
     # Continue with any subsequent actions           
     # Fine adjustment: reverse slowly for a short distance.
     #_, t_adjust = speed_and_time(speed/2, d_safe/5)
@@ -200,7 +204,10 @@ def drop_off(data, depo = 1):
         sleep(2.55)
         actuator.stop()
         wheels.reverse()
-        sleep(0.55) #need to adjust sleep time
+        if data == 'D':
+            sleep(0.45)
+        else:
+            sleep(0.55)
         wheels.stop()
         actuator.retract()
         sleep(3)
@@ -241,7 +248,7 @@ def main():
 #this is the actual main structure for the competition
 
     navigate(routes["D1"][0])
-    n=1
+    n=4
     for i in range(n):
         data=pick_up(a=i, depo=1)           
         navigate(routes[data][0])
@@ -252,9 +259,9 @@ def main():
         else:
             if time.time()-start<240:
                 navigate(routes[data][3])
-                pick_up(depo = 2)
+                pick_up(depo = 2, a = 0)
                 navigate(routes['A'][2])
-                drop_off(data = 'A')
+                drop_off(data = 'A', depo = 2)
                 navigate(routes['A'][4])
             else:
                 navigate(routes[data][4])
@@ -266,6 +273,7 @@ def main():
     
 if __name__ == "__main__":
     main()
+
 
 
 
