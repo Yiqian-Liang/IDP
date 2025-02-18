@@ -1,5 +1,6 @@
 from motor import Wheel, Actuator  # Import the Wheel and Actuator classes
-from time import sleep 
+from time import sleep
+import time
 from sensors import QRCodeReader, DistanceSensor, LineSensor, LED, Button
 from machine import Pin, PWM, I2C, Timer
 from do_route import speed_and_time, routes, rotate, full_rotation, wheels, attach_junction_interrupts, detach_junction_interrupts, junction_detected
@@ -17,6 +18,10 @@ crash_sensor = Button(pin = 12)
 led = LED(pin = 17)
 
 forward_speed=90
+actuator_speed=80
+extension=14 #14mm
+drop_off_distance=10 #10cm
+actuator_max_speed=7 #7mm/s
 
 # Simplified line following function
 def line_following(speed = 90):
@@ -114,7 +119,6 @@ def pick_up(a, depo=1, speed=80, d_rev=7, d_safe=6.5):
     #_, t_adjust = speed_and_time(speed/2, d_safe/5)
     #sleep(t_adjust)
     actuator.retract(speed=100)
-    sleep(1)
     wheels.reverse(speed/2)
     wheels.stop()
     wheels.stop()
@@ -292,7 +296,7 @@ def main():
 #this is the actual main structure for the competition
 
     navigate(routes["D1"][0])
-    n=4
+    n=1
     for i in range(n):
         data=pick_up(a=i, depo=1)           
         navigate(routes[data][0])
@@ -301,7 +305,7 @@ def main():
         if i<n-1:
             navigate(routes[data][1])                
         else:
-            if time.time()-start<180:
+            if time.time()-start<240:
                 navigate(routes[data][3])
                 pick_up(depo = 2)
                 navigate(routes['A'][2])
@@ -317,6 +321,7 @@ def main():
     
 if __name__ == "__main__":
     main()
+
 
 
 

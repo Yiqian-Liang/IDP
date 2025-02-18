@@ -13,12 +13,8 @@ D=0.19 #in meters ditance between the wheels
 direction=0
 forward_speed=90
 rotate_speed=90
-forward_distance=3/100 #5cm
+forward_distance=2/100 #5cm
 reverse_speed=40
-actuator_speed=80
-extension=14 #14mm
-drop_off_distance=10 #10cm
-actuator_max_speed=7 #7mm/s
 rpm_full_load=40 #rpm=speed*rpm_full_load/100
 
 def speed_and_time(speed,distance_cm=6):
@@ -280,6 +276,7 @@ routes = {
         ]
     ]
 }
+
 
 
 
