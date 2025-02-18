@@ -72,7 +72,7 @@ def pick_up_block(r = 0, depo = 1,distance_cm=6.8):  #set r if needs to revers b
             print(data)
             break
         elif distance_sensor.read() >= distance_cm:
-            line_following(speed = 60)
+            line_following(speed = 80)
         else:
             wheels.reverse()
             sleep(1)
@@ -97,8 +97,8 @@ def pick_up_block(r = 0, depo = 1,distance_cm=6.8):  #set r if needs to revers b
         sleep(0.3)
         wheels.stop()
         
-    actuator.retract()
-    sleep(3)
+    actuator.retract(speed = 50)
+    sleep(4)
     actuator.stop()
     
     if r == 1:
@@ -135,6 +135,11 @@ def drop_off(data):
             wheels.stop()
         elif data == 'C':
             full_rotation(direction = 1)
+        elif data == 'B':
+            full_rotation(direction = 1)
+            wheels.reverse(speed = 60)
+            sleep(0.3)
+            wheels.stop()
         else:
             full_rotation(direction = 0)
         attach_junction_interrupts()
@@ -173,7 +178,11 @@ def main():
             navigate(routes[data][1])
                 
         else:
-            navigate(routes[data][4])
+            navigate(routes[data][3])
+            pick_up_block(depo = 2)
+            navigate(routes['A'][2])
+            drop_off(data = 'A')
+            navigate(routes['A'][4])
             wheels.forward()
             sleep(1.7)
             led.stop_flash()
@@ -181,6 +190,7 @@ def main():
     
 if __name__ == "__main__":
     main()
+
 
 
 
