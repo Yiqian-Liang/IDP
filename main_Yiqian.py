@@ -109,7 +109,7 @@ def pick_up(a, depo=1, speed=80, d_rev=7, d_safe=6.5):
     data1 = None
     data2 = None
     attempt=2
-    extend()
+    # extend()
 
     # Main loop: continue until a valid QR code is detected.
     while True:
@@ -270,9 +270,9 @@ def main():
         pass
 
     start=time.time()
-    actuator.retract(speed = 100)
-    sleep(2.5)
-    actuator.stop()
+    # actuator.retract(speed = 100)
+    # sleep(2.5)
+    # actuator.stop()
 
     led.start_flash() #starts flashing as soon as starts first route
     
