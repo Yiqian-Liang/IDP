@@ -148,7 +148,7 @@ def main():
     while button.read() == 0:
         pass
 
-    
+    start=time.time()
     actuator.retract(speed = 100)
     sleep(2.5)
     actuator.stop()
@@ -170,10 +170,14 @@ def main():
         drop_off(data)
             
         if i<n-1:
-            navigate(routes[data][1])
-                
+            navigate(routes[data][1])                
         else:
-            navigate(routes[data][4])
+            if time.time()-start<180:
+                navigate(routes[data][3])
+                data=pick_up_block(r=0, depo=2)
+                navigate(routes[data][4])
+            else:
+                navigate(routes[data][4])
             wheels.forward()
             sleep(1.7)
             led.stop_flash()
