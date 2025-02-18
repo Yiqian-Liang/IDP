@@ -87,6 +87,8 @@ def pick_up(a, depo=1, speed=80, d_rev=7, d_safe=6.5):
     data1 = None
     data2 = None
     attempt=2
+    if a>=1:
+        wheels.forward(speed/2)
     extend()
 
     # Main loop: continue until a valid QR code is detected.
