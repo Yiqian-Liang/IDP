@@ -1,9 +1,11 @@
 from motor import Wheel, Actuator  # Import the Wheel and Actuator classes
-from time import sleep 
+from time import sleep
+import time
 from sensors import QRCodeReader, DistanceSensor, LineSensor, LED, Button
 from machine import Pin, PWM, I2C, Timer
-from do_route import routes, rotate, full_rotation, wheels, attach_junction_interrupts, detach_junction_interrupts, junction_detected
+from do_route_new import speed_and_time, routes, rotate, full_rotation, wheels, attach_junction_interrupts, detach_junction_interrupts, junction_detected
 import jf
+import random
 
 #---------------------- Set up motors
 actuator = Actuator(3, 2) # Initialize linear actuator (GP8 for direction, GP9 for PWM control)
@@ -16,35 +18,11 @@ button = Button(pin = 14) #push button
 crash_sensor = Button(pin = 12)
 led = LED(pin = 17)
 
-d_wheel=6.5/100 #in meters
-D=0.19 #in meters ditance between the wheels
-direction=0
 forward_speed=90
-rotate_speed=90
-forward_distance=3/100 #5cm
-reverse_speed=40
 actuator_speed=80
 extension=14 #14mm
 drop_off_distance=10 #10cm
 actuator_max_speed=7 #7mm/s
-rpm_full_load=40 #rpm=speed*rpm_full_load/100
-junction_flag=0
-def attach_junction_interrupts(timer = None):
-    sensors[0].pin.irq(trigger=Pin.IRQ_RISING, handler=junction_detected)
-    sensors[-1].pin.irq(trigger=Pin.IRQ_RISING, handler=junction_detected)
-def detach_junction_interrupts():
-    sensors[0].pin.irq(trigger = Pin.IRQ_RISING, handler = None)
-    sensors[-1].pin.irq(trigger = Pin.IRQ_RISING, handler = None)
-def junction_detected(pin):
-    global junction_flag
-    junction_flag = 1  # Set the flag when an interrupt occurs
-    return junction_flag
-def speed_and_time(speed,distance_cm=6):
-    rpm=speed*rpm_full_load/100
-    w_wheel=rpm*2*3.14/60
-    v_wheel=d_wheel*w_wheel/2
-    time=distance_cm/(v_wheel*100)
-    return v_wheel,time
 
 # Simplified line following function
 def line_following(speed = 90):
@@ -85,6 +63,7 @@ def navigate(route):
             line_following()
     wheels.stop()
     sleep(1)
+
 def extend(speed=actuator_speed): #extend actuator
     time=extension/(actuator_max_speed*speed/100)
     actuator.extend(speed)
@@ -108,8 +87,10 @@ def pick_up(a, depo=1, speed=80, d_rev=7, d_safe=6.5):
     
     data1 = None
     data2 = None
-    attempt=2
-    # extend()
+    attempt=0
+    if a>=1:
+        wheels.forward(speed/2)
+    extend()
 
     # Main loop: continue until a valid QR code is detected.
     while True:
@@ -131,22 +112,21 @@ def pick_up(a, depo=1, speed=80, d_rev=7, d_safe=6.5):
             attempt += 1
             if attempt > 2:             # If the robot reaches the safe distance without detecting a QR code,# reverse for a calculated duration and then try again.
                 data2=random.choice(['A', 'B', 'C', 'D'])
-                continue #if we can't read just deliver to random point)
-            _, t_safe = speed_and_time(speed, d_safe)
-            wheels.reverse(speed)
-            sleep(t_safe)
-            wheels.stop()
+                break #if we can't read just deliver to random point)
+            else:
+                _, t_safe = speed_and_time(speed, d_safe)
+                wheels.reverse(speed)
+                sleep(t_safe)
+                wheels.stop()
     # Continue with any subsequent actions           
     # Fine adjustment: reverse slowly for a short distance.
     #_, t_adjust = speed_and_time(speed/2, d_safe/5)
     #sleep(t_adjust)
-    actuator.retract(speed=100)
-    sleep(1)
     wheels.reverse(speed/2)
-    wheels.stop()
+    actuator.retract(speed=100)
     wheels.stop()
     if a > 2:
-        _, t_reverse = speed_and_time(speed, (a - 2.5) * d_rev)
+        _, t_reverse = speed_and_time(speed, (a - 2) * d_rev)
         wheels.reverse(speed)
         sleep(t_reverse)
         wheels.stop()
@@ -172,7 +152,7 @@ def pick_up_block(r = 0, depo = 1,distance_cm=6.8):  #set r if needs to revers b
             print(data)
             break
         elif distance_sensor.read() >= distance_cm:
-            line_following(speed = 60)
+            line_following(speed = 80)
         else:
             wheels.reverse()
             sleep(1)
@@ -197,8 +177,8 @@ def pick_up_block(r = 0, depo = 1,distance_cm=6.8):  #set r if needs to revers b
         sleep(0.3)
         wheels.stop()
         
-    actuator.retract()
-    sleep(3)
+    actuator.retract(speed = 50)
+    sleep(4)
     actuator.stop()
     
     if r == 1:
@@ -213,46 +193,18 @@ def pick_up_block(r = 0, depo = 1,distance_cm=6.8):  #set r if needs to revers b
         attach_junction_interrupts()
     return data
 
-def drop_off_block(data,speed=50,depo=1):
+def drop_off(data,speed=70,depo=1):
     detach_junction_interrupts()
-    start=time.time()
-    time1=(speed_and_time(speed=50,distance_cm=20)[1])
-    while time.time()-start < time1 :  #may change forward distance
-        line_following(speed=50)
-    print(time.time()-start)
-    print('b')
-    wheels.stop()
-    sleep(1)
-    print('a')
-#     wheels.reverse(speed=50)
-    extend(100) #need to check after extending whether the robot has passed the drop off line
-    n=0
+    extend(100)
     wheels.reverse(speed=speed)
+    sleep(speed_and_time(speed, 10)[1])
+    tim=Timer()
     attach_junction_interrupts()
     while True:
-        if junction_flag==1:
-            n+=1
-            junction_flag=0
-            detach_junction_interrupts()
-            timer.init(period=1000, mode=Timer.ONE_SHOT, callback=attach_junction_interrupts) #attach 1s later
-            if n==2:
+        if jf.junction_flag==1:
                 break
     wheels.stop()
     print('c')
-# Alternative extra safety
-#     start1=time.time()
-#     while (time.time() - start1 < speed_and_time(speed=50, distance_cm=30)[1]):
-#         wheels.reverse(speed=50)
-#     print('good')
-#     attach_junction_interrupts()
-#     while True:
-# #         wheels.reverse(speed=50)
-#         if junction_detected():
-#             break
-    # print(f"Sensors: {sensors[-1].read()}, {sensors[0].read()}")  # Debug
-    # print(f"Time elapsed: {time.time() - start}")  # Debug
-    # print(time.time-start)
-    # wheels.stop()
     if data == "C":
         rotate(direction="left")
     elif data in ["A", "B", "D"]:
@@ -262,6 +214,7 @@ def drop_off_block(data,speed=50,depo=1):
             rotate(direction="left")
 
 def main():
+
     wheels.stop()
     actuator.stop()
     led.stop_flash()
@@ -270,6 +223,7 @@ def main():
         pass
 
     start=time.time()
+    retract()
     # actuator.retract(speed = 100)
     # sleep(2.5)
     # actuator.stop()
@@ -278,6 +232,7 @@ def main():
     
 
 #this is the actual main structure for the competition
+
     navigate(routes["D1"][0])
     n=4
     for i in range(n):
@@ -288,16 +243,19 @@ def main():
         if i<n-1:
             navigate(routes[data][1])                
         else:
-            if time.time()-start<180:
+            if time.time()-start<240:
                 navigate(routes[data][3])
-                data=pick_up(a=0, depo=2)
-                navigate(routes[data][4])
+                pick_up(depo = 2, a = 0)
+                navigate(routes['A'][2])
+                drop_off(data = 'A', depo = 2)
+                navigate(routes['A'][4])
             else:
                 navigate(routes[data][4])
             wheels.forward()
-            sleep(1.7)
+            sleep(1.8)
             led.stop_flash()
             wheels.stop()
+
     
 if __name__ == "__main__":
     main()
