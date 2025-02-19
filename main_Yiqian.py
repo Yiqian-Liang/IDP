@@ -197,6 +197,7 @@ def drop_off(data,speed=70,depo=1):
     detach_junction_interrupts()
     extend(100)
     wheels.reverse(speed=speed)
+    sleep(speed_and_time(speed, 10)[1])
     tim=Timer()
     attach_junction_interrupts()
     while True:
