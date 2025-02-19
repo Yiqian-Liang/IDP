@@ -82,7 +82,7 @@ def full_rotation(direction,speed=rotate_speed*0.8,angle=180):
         v_wheel=d_wheel*w_wheel/2
         w_ic=2*v_wheel/D
         #w_ic=v_wheel/D
-        time=angle*3.14*0.8/(180*w_ic) #leave some room for adjustment
+        time=angle*3.14*0.7/(180*w_ic) #leave some room for adjustment
         #forward_time=forward_distance/v_wheel
         print(time)
         wheels.stop()  # Stop before turning
@@ -276,6 +276,7 @@ routes = {
         ]
     ]
 }
+
 
 
 

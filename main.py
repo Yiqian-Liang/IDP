@@ -62,7 +62,6 @@ def navigate(route):
         else:
             line_following()
     wheels.stop()
-    sleep(1)
 
 def extend(speed=actuator_speed): #extend actuator
     time=extension/(actuator_max_speed*speed/100)
@@ -139,60 +138,6 @@ def pick_up(a, depo=1, speed=80, d_rev=7, d_safe=6.5):
     actuator.stop()
     return data2
 
-def pick_up_block(r = 0, depo = 1,distance_cm=6.8):  #set r if needs to revers before 180 
-    jf.junction_flag =0
-    attach_junction_interrupts()
-    actuator.retract(speed = 100)
-    sleep(0.1)
-    actuator.extend()
-    sleep(2.55)
-    actuator.stop()
-    while True:
-        if (data := code_reader.read_qr_code()) is not None:
-            print(data)
-            break
-        elif distance_sensor.read() >= distance_cm:
-            line_following(speed = 80)
-        else:
-            wheels.reverse()
-            sleep(1)
-    wheels.stop()
-    
-         
-    while distance_sensor.read() >= distance_cm:
-        print(distance_sensor.read())
-        if jf.junction_flag!=0:
-            wheels.forward(speed=50)
-            sleep(0.5)
-            jf.junction_flag = 0
-        else:
-            line_following(speed = 50)
-    
-    wheels.stop()
-    
-    if r != 1:
-        pass
-    else:
-        wheels.reverse(speed = 60)
-        sleep(0.3)
-        wheels.stop()
-        
-    actuator.retract(speed = 50)
-    sleep(4)
-    actuator.stop()
-    
-    if r == 1:
-        wheels.reverse()
-        sleep(1)
-
-    if depo==1:
-        full_rotation(direction=1)
-        attach_junction_interrupts()
-    elif depo==2:
-        full_rotation(direction=0)
-        attach_junction_interrupts()
-    return data
-
 def drop_off(data, depo = 1):
         detach_junction_interrupts()
         if depo == 1:
@@ -205,7 +150,9 @@ def drop_off(data, depo = 1):
         actuator.stop()
         wheels.reverse()
         if data == 'D':
-            sleep(0.45)
+            sleep(0.5)
+        elif depo == 2:
+            sleep(0.15)
         else:
             sleep(0.55)
         wheels.stop()
@@ -215,7 +162,7 @@ def drop_off(data, depo = 1):
         if data == 'D':
             full_rotation(direction = 1)
             wheels.reverse(speed = 60)
-            sleep(0.8)
+            sleep(0.5)
             wheels.stop()
         elif data == 'C':
             full_rotation(direction = 1)
@@ -274,6 +221,7 @@ def main():
     
 if __name__ == "__main__":
     main()
+
 
 
 
