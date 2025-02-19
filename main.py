@@ -76,7 +76,7 @@ def retract(speed=actuator_speed): #retract actuator
     actuator.stop()
     return time
     
-def pick_up(a, depo=1, speed=80, d_rev=7, d_safe=6.5):
+def pick_up(a, depo=1, speed=80, d_rev=7, d_safe=7.0):
     # Compute wheel speed parameters based on safe distance.
     v_wheel, t_safe = speed_and_time(speed, d_safe)
     # Initial setup: perform actuator retraction and extension.
@@ -109,11 +109,11 @@ def pick_up(a, depo=1, speed=80, d_rev=7, d_safe=6.5):
             break
         else:
             attempt += 1
-            if attempt > 2:             # If the robot reaches the safe distance without detecting a QR code,# reverse for a calculated duration and then try again.
+            if attempt > 3:             # If the robot reaches the safe distance without detecting a QR code,# reverse for a calculated duration and then try again.
                 data2=random.choice(['A', 'B', 'C', 'D'])
                 break #if we can't read just deliver to random point)
             else:
-                _, t_safe = speed_and_time(speed, d_safe)
+                _, t_safe = speed_and_time(speed, d_safe+5)
                 wheels.reverse(speed)
                 sleep(t_safe)
                 wheels.stop()
@@ -140,7 +140,7 @@ def pick_up(a, depo=1, speed=80, d_rev=7, d_safe=6.5):
 
 def drop_off(data, depo = 1):
         detach_junction_interrupts()
-        if depo == 1:
+        if depo == 1 or data == 'D' or data == 'C':
             wheels.forward()
             sleep(0.4)
         wheels.stop()
@@ -151,8 +151,6 @@ def drop_off(data, depo = 1):
         wheels.reverse()
         if data == 'D':
             sleep(0.5)
-        elif depo == 2:
-            sleep(0.15)
         else:
             sleep(0.55)
         wheels.stop()
@@ -169,14 +167,18 @@ def drop_off(data, depo = 1):
         elif data == 'B':
             full_rotation(direction = 1)
             wheels.reverse(speed = 60)
-            sleep(0.3)
+            sleep(0.4)
+            wheels.stop()
+        elif depo == 2 and data == 'Α':
+            full_rotation(direction = 0)
+            wheels.reverse(speed = 60)
+            sleep(0.4)
             wheels.stop()
         else:
             full_rotation(direction = 0)
         attach_junction_interrupts()
 
 def main():
-
     wheels.stop()
     actuator.stop()
     led.stop_flash()
@@ -185,7 +187,7 @@ def main():
         pass
 
     start=time.time()
-    retract()
+    actuator.retract()
     # actuator.retract(speed = 100)
     # sleep(2.5)
     # actuator.stop()
@@ -196,6 +198,7 @@ def main():
 #this is the actual main structure for the competition
 
     navigate(routes["D1"][0])
+    actuator.stop()
     n=4
     for i in range(n):
         data=pick_up(a=i, depo=1)           
@@ -207,10 +210,15 @@ def main():
         else:
             if time.time()-start<240:
                 navigate(routes[data][3])
-                pick_up(depo = 2, a = 0)
-                navigate(routes['A'][2])
-                drop_off(data = 'A', depo = 2)
-                navigate(routes['A'][4])
+                data = pick_up(depo = 2, a = 0)
+                if data != 'B':
+                    navigate(routes[data][2])
+                    drop_off(data = data, depo = 2)
+                    navigate(routes[data][4])
+                else:
+                    navigate(routes['A'][2])
+                    drop_off(data = 'A', depo = 2)
+                    navigate(routes['A'][4])
             else:
                 navigate(routes[data][4])
             wheels.forward()
