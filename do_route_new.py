@@ -183,11 +183,9 @@ routes = {
         ],
         [  # B to D2
             # [(1, 1), lambda: rotate(direction="right")],
-            [(1, 1), lambda: rotate(direction="right")],
-            [(1, 1), lambda: rotate(direction="right")],
             [(0, 1), None],
+            [(1, 1), lambda: rotate(direction="left")],
             [(0, 1), None],
-            [(0, 1), lambda: rotate(direction="left")],
             #[(0, 0), wheels.stop]
         ],
         [  # B to start
