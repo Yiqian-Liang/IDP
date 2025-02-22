@@ -1,7 +1,7 @@
 from motor import Wheel, Actuator  # Import the Wheel and Actuator classes
 from time import sleep
 import time
-from sensors import QRCodeReader, DistanceSensor, LineSensor, LED, Button
+from sensors import QRCodeReader, DistanceSensor, LineSensor, LED, Button #sensors we are using
 from machine import Pin, PWM, I2C, Timer
 from do_route import speed_and_time, routes, rotate, full_rotation, wheels, attach_junction_interrupts, detach_junction_interrupts, junction_detected
 import jf
@@ -79,10 +79,6 @@ def retract(speed=actuator_speed): #retract actuator for certain time
 def pick_up(a, depo=1, speed=80, d_rev=7, d_safe=7.0):
     # Compute wheel speed parameters based on safe distance.
     v_wheel, t_safe = speed_and_time(speed, d_safe)
-    # Initial setup: perform actuator retraction and extension.
-#     retract(100)
-#     extend(100)  
-    # Reverse for a preset duration (rev_time should be defined globally).
     
     data1 = None
     data2 = None
