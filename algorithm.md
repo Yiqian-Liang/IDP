@@ -1,4 +1,12 @@
 ```mermaid
+%%{init: {
+  "theme": "default",
+  "flowchart": {
+    "useMaxWidth": false,
+    "nodeSpacing": 60,
+    "rankSpacing": 60
+  }
+}}%%
 flowchart LR
 
     subgraph Navigation
