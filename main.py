@@ -63,13 +63,13 @@ def navigate(route):
             line_following()
     wheels.stop()
 
-def extend(speed=actuator_speed): #extend actuator
+def extend(speed=actuator_speed): #extend actuator for precise time so that it fits into the block
     time=extension/(actuator_max_speed*speed/100)
     actuator.extend(speed)
     sleep(time)
     actuator.stop()
     return time
-def retract(speed=actuator_speed): #retract actuator
+def retract(speed=actuator_speed): #retract actuator for certain time
     time=extension/(actuator_max_speed*speed/100)*1.25 #EXTRA FOR SAFETY
     actuator.retract(speed)
     sleep(time)
@@ -109,7 +109,8 @@ def pick_up(a, depo=1, speed=80, d_rev=7, d_safe=7.0):
             break
         else:
             attempt += 1
-            if attempt > 3:             # If the robot reaches the safe distance without detecting a QR code,# reverse for a calculated duration and then try again.
+            if attempt > 3:    
+                # If the robot reaches the safe distance without detecting a QR code,# reverse for a calculated duration and then try again.
                 data2=random.choice(['A', 'B', 'C', 'D'])
                 break #if we can't read just deliver to random point)
             else:
@@ -140,7 +141,7 @@ def pick_up(a, depo=1, speed=80, d_rev=7, d_safe=7.0):
 
 def drop_off(data, depo = 1):
         detach_junction_interrupts()
-        if depo == 1 or data == 'D' or data == 'C':
+        if depo == 1 or data == 'D' or data == 'C': #If second time round, sometimes no space for fwd
             wheels.forward()
             sleep(0.4)
         wheels.stop()
@@ -148,16 +149,16 @@ def drop_off(data, depo = 1):
         actuator.extend()
         sleep(2.55)
         actuator.stop()
-        wheels.reverse()
+        wheels.reverse()#reverse out from the block
         if data == 'D':
             sleep(0.5)
         else:
             sleep(0.55)
         wheels.stop()
-        actuator.retract()
+        actuator.retract()#retract once far enough back to minimise risk of collision
         sleep(3)
         actuator.stop()
-        if data == 'D':
+        if data == 'D':#different directions/reversing required for each drop off point
             full_rotation(direction = 1)
             wheels.reverse(speed = 60)
             sleep(0.5)
@@ -183,35 +184,31 @@ def main():
     actuator.stop()
     led.stop_flash()
     
-    while button.read() == 0:
+    while button.read() == 0:#wait for button to start
         pass
 
-    start=time.time()
-    actuator.retract()
-    # actuator.retract(speed = 100)
-    # sleep(2.5)
-    # actuator.stop()
+    start=time.time() #start a timer to keep track of time
+    actuator.retract()#retract while moving to ensure all the way up
 
     led.start_flash() #starts flashing as soon as starts first route
     
-
-#this is the actual main structure for the competition
-
-    navigate(routes["D1"][0])
+#this is the main structure for the competition
+    navigate(routes["D1"][0])#go to first depo
     actuator.stop()
     n=4
-    for i in range(n):
+    for i in range(n):#repeat this for each block
         data=pick_up(a=i, depo=1)           
         navigate(routes[data][0])
         drop_off(data)
             
-        if i<n-1:
+        if i<n-1: #first 3 times go back to depo 1
             navigate(routes[data][1])                
         else:
             if time.time()-start<240:
+                # on 4th time, if time is less than 4 minutes, go to depo 2 for a 5th, final block
                 navigate(routes[data][3])
                 data = pick_up(depo = 2, a = 0)
-                if data != 'B':
+                if data != 'B': #couldn't get B working before comp, so just go to A
                     navigate(routes[data][2])
                     drop_off(data = data, depo = 2)
                     navigate(routes[data][4])
@@ -221,7 +218,7 @@ def main():
                     navigate(routes['A'][4])
             else:
                 navigate(routes[data][4])
-            wheels.forward()
+            wheels.forward()# go forward into the end zone
             sleep(1.8)
             led.stop_flash()
             wheels.stop()
